@@ -1,0 +1,27 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build tankgame (debug)",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+
+            "type": "shell",
+
+            "command": "odin build ./source -debug -out:build/tankgame-debug",
+        },
+        {
+            "label": "Build tankgame (release)",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+
+            "type": "shell",
+
+            "command": "odin build ./source -out:build/tankgame",
+        }
+    ]
+}

@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug tankgame",
+            "preLaunchTask": "Build tankgame (debug)",
+            "cwd": "${workspaceFolder}",
+
+            "request": "launch",
+            "type": "lldb",
+
+            "program": "build/tankgame-debug",
+            "args": [],
+        }
+    ]
+}
