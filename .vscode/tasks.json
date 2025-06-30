@@ -10,7 +10,7 @@
 
             "type": "shell",
 
-            "command": "odin build ./source -debug -out:build/tankgame-debug",
+            "command": "odin build ./tankgame -debug -out:build/tankgame-debug",
         },
         {
             "label": "Build tankgame (release)",
@@ -21,7 +21,7 @@
 
             "type": "shell",
 
-            "command": "odin build ./source -out:build/tankgame",
+            "command": "odin build ./tankgame -out:build/tankgame",
         }
     ]
 }
