@@ -1,6 +1,7 @@
 package game
 
 import engine "../engine"
+import log "../engine/logging"
 
 import SDL "vendor:sdl3"
 
@@ -16,6 +17,10 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
                 case .QUIT:
                     return
             }
+
+            if does_player_handle(&event) {
+                handle_player_movement(&player, &event)
+            }
         }
 
         // sineWave := SDL.sinf(((f32(SDL.GetTicks() % 3000)) / 3000.0) * 2.0 * math.PI)
@@ -24,6 +29,7 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
 
         SDL.RenderClear(renderer)
 
+        update_player(&player)
         render_player(estate, &player)
 
         SDL.RenderPresent(renderer)
