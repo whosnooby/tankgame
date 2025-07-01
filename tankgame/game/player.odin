@@ -45,8 +45,11 @@ direction_opposite :: proc(dir: PlayerMoveDirection) -> PlayerMoveDirection {
 
 Player :: struct {
     position: engine.vec2,
+    speed: f32,
     directions: [4]PlayerMoveDirection,
     active_direction_count: int,
+    
+
     texture: ^SDL.Texture,
     rendering: bool,
 }
@@ -55,6 +58,7 @@ Player :: struct {
 create_player :: proc(state: ^engine.State) -> (player: Player) {
     player.position = { 100, 100 }
     player.rendering = true
+    player.speed = 100.0
 
     if texture, ok := renderer.create_texture_from_image(state, "resources/player.bmp"); ok {
         player.texture = texture
@@ -131,7 +135,7 @@ handle_player_movement :: proc(player: ^Player, event: ^SDL.Event) {
     }
 
     if event.key.down {
-        log.trace("adding %v to player.directions at index %d", direction, player.active_direction_count)
+        // log.trace("adding %v to player.directions at index %d", direction, player.active_direction_count)
         player.directions[player.active_direction_count] = direction
 
         player.active_direction_count += 1
@@ -144,7 +148,7 @@ handle_player_movement :: proc(player: ^Player, event: ^SDL.Event) {
     released_idx : int = 4
     for &dir, idx in player.directions {
         if dir == direction {
-            log.trace("removing %v from player.directions at index %d", dir, idx)
+            // log.trace("removing %v from player.directions at index %d", dir, idx)
             dir = .NONE
             released_idx = idx
         }
@@ -158,12 +162,13 @@ handle_player_movement :: proc(player: ^Player, event: ^SDL.Event) {
     player.active_direction_count -= 1
 }
 
-update_player :: proc(player: ^Player) {
+update_player :: proc(player: ^Player, time: ^engine.Time) {
     if player.active_direction_count == 0 {
         return
     }
     vectors := PlayerMoveVectors
-    player.position += vectors[player.directions[player.active_direction_count - 1]] * 0.5
+    direction := vectors[player.directions[player.active_direction_count - 1]]
+    player.position += direction * player.speed * time.delta_seconds
 }
 
 render_player :: proc(state: ^engine.State, player: ^Player) {

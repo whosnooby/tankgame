@@ -1,5 +1,6 @@
 package game
 
 State :: struct {
-    player: Player
+    player: Player,
+    level: uint,
 }

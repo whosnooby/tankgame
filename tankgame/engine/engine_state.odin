@@ -8,6 +8,9 @@ State :: struct {
     window : ^SDL.Window,
     renderer : ^SDL.Renderer,
     event : SDL.Event,
+    time: Time,
+
+    cvars: [CVars]CVar,
 }
 
 create_window :: proc() -> (window: ^SDL.Window, ok: bool) {

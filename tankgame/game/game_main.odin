@@ -23,13 +23,11 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
             }
         }
 
-        // sineWave := SDL.sinf(((f32(SDL.GetTicks() % 3000)) / 3000.0) * 2.0 * math.PI)
-        // r := u8(sineWave * 127.0) + 127;
-        // SDL.SetRenderDrawColor(renderer, r, 0, 0, 255)
+        engine.time_frame(&estate.time)
 
         SDL.RenderClear(renderer)
 
-        update_player(&player)
+        update_player(&player, &estate.time)
         render_player(estate, &player)
 
         SDL.RenderPresent(renderer)
