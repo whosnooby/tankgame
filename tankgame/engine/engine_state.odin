@@ -1,31 +1,34 @@
 package engine
 
 import log "logging"
+import render "renderer"
 
 import SDL "vendor:sdl3"
 
 State :: struct {
     window : ^SDL.Window,
     renderer : ^SDL.Renderer,
+    render_target: ^SDL.Texture,
     event : SDL.Event,
     time: Time,
 
     cvars: [CVars]CVar,
 }
 
+SCREEN_WIDTH : i32 : 640
+SCREEN_HEIGHT: i32 : 360
+
 create_window :: proc() -> (window: ^SDL.Window, ok: bool) {
     title :: "tankgame"
-    width :: 1280 / 2
-    height :: 720 / 2
     flags: SDL.WindowFlags : { .RESIZABLE }
 
     log.info("creating window (w: %d, h: %d) title: \"%s\" %v",
-        width, height, title, flags
+        SCREEN_WIDTH, SCREEN_HEIGHT, title, flags
     )
 
     window = SDL.CreateWindow(
         "tankgame",
-        width, height,
+        SCREEN_WIDTH, SCREEN_HEIGHT,
         { .RESIZABLE, },
     )
 
@@ -54,6 +57,16 @@ create_renderer :: proc(state: ^State) -> (renderer: ^SDL.Renderer, ok: bool) {
     name := SDL.GetRendererName(renderer)
     log.info("created renderer: %s", name)
 
+
+    return
+}
+
+create_render_target :: proc(state: ^State) -> (target: ^SDL.Texture, ok: bool) {
+    target, ok = render.create_blank_texture(state.renderer, [2]i32{ SCREEN_WIDTH, SCREEN_HEIGHT })
+    if !ok {
+        log.panic("failed to create render target texture")
+    }
+
     return
 }
 
@@ -69,6 +82,7 @@ query_render_drivers :: proc() {
 }
 
 cleanup_state :: proc(state: ^State) {
+    SDL.DestroyTexture(state.render_target)
     SDL.DestroyRenderer(state.renderer)
     SDL.DestroyWindow(state.window)
 }

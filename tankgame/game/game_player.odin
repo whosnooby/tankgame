@@ -55,22 +55,26 @@ Player :: struct {
 }
 
 
-create_player :: proc(state: ^engine.State) -> (player: Player) {
+create_player :: proc(estate: ^engine.State) -> (player: Player) {
     player.position = { 100, 100 }
     player.rendering = true
     player.speed = 100.0
 
-    if texture, ok := renderer.create_texture_from_image(state, "resources/player.bmp"); ok {
+    if texture, ok := renderer.create_texture_from_image(estate.renderer, "resources/player.bmp"); ok {
         player.texture = texture
     } else {
         log.warn("falling back to solid color player texture")
-        texture, ok := renderer.create_solid_texture(state, { 16, 16 }, { 255, 0, 255, 255 })
+        texture, ok := renderer.create_solid_texture(estate.renderer, { 16, 16 }, { 255, 0, 255, 255 })
         player.texture = texture
         if !ok {
             log.panic("failed to load/generate player texture")
         }
     }
     return
+}
+
+cleanup_player :: proc(player: ^Player) {
+    SDL.DestroyTexture(player.texture)
 }
 
 get_player_rect :: proc(player: ^Player) -> SDL.FRect {
@@ -160,6 +164,10 @@ handle_player_movement :: proc(player: ^Player, event: ^SDL.Event) {
     }
     // log.trace(" player.directions: %v", player.directions)
     player.active_direction_count -= 1
+}
+
+tick_player :: proc(player: ^Player) {
+
 }
 
 update_player :: proc(player: ^Player, time: ^engine.Time) {

@@ -1,6 +1,5 @@
 package renderer
 
-import engine ".."
 import log "../logging"
 
 import SDL "vendor:sdl3"
@@ -13,8 +12,24 @@ u32_color_from_rgba :: proc(color: [4]u8) -> (rgba: u32) {
     return
 }
 
+create_blank_texture :: proc(
+    renderer: ^SDL.Renderer,
+    size: [2]i32
+) -> (
+    texture: ^SDL.Texture,
+    ok: bool
+) {
+    log.trace("creating empty texture (w: %d, h: %d)", size.x, size.y)
+    texture = SDL.CreateTexture(renderer, .RGBA32, .TARGET, size.x, size.y)
+    ok = texture != nil
+    if !ok {
+        log.error("failed to create texture: %s", SDL.GetError())
+    }
+    return
+}
+
 create_solid_texture :: proc(
-    state: ^engine.State,
+    renderer: ^SDL.Renderer,
     size: [2]i32,
     color: [4]u8
 ) -> (
@@ -30,7 +45,7 @@ create_solid_texture :: proc(
     log.trace("creating solid color texture (w: %d, h: %d) 0x%x",
         size.x, size.y, color 
     )
-    texture = SDL.CreateTextureFromSurface(state.renderer, surface)
+    texture = SDL.CreateTextureFromSurface(renderer, surface)
     ok = texture != nil
     if !ok {
         log.error("failed to create texture: %s", SDL.GetError())
@@ -38,7 +53,7 @@ create_solid_texture :: proc(
     return
 }
 
-create_texture_from_image :: proc(state: ^engine.State, path: cstring) -> (texture: ^SDL.Texture, ok: bool) {
+create_texture_from_image :: proc(renderer: ^SDL.Renderer, path: cstring) -> (texture: ^SDL.Texture, ok: bool) {
     surface := SDL.LoadBMP(path)  
     defer SDL.DestroySurface(surface)
 
@@ -51,7 +66,7 @@ create_texture_from_image :: proc(state: ^engine.State, path: cstring) -> (textu
     log.trace("creating texture (w: %d, h: %d) from image %s",
         surface.w, surface.h, path
     )
-    texture = SDL.CreateTextureFromSurface(state.renderer, surface)
+    texture = SDL.CreateTextureFromSurface(renderer, surface)
 
     ok = texture != nil
     if !ok {
@@ -61,6 +76,7 @@ create_texture_from_image :: proc(state: ^engine.State, path: cstring) -> (textu
 }
 
 create_texture :: proc {
+    create_blank_texture,
     create_solid_texture,
     create_texture_from_image,
 }

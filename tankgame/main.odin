@@ -49,7 +49,12 @@ main :: proc() {
     } else {
         return
     }
-    defer engine.cleanup_state(&estate)
+
+    if target, ok := engine.create_render_target(&estate); ok {
+        estate.render_target = target
+    } else {
+        return
+    }
 
     gstate.player = game.create_player(&estate)
 
@@ -59,4 +64,7 @@ main :: proc() {
     engine.print_cvars(&estate, "initialized cvars:")
 
     game.main_loop(&estate, &gstate)
+
+    engine.cleanup_state(&estate)
+    game.cleanup_player(&gstate.player)
 }
