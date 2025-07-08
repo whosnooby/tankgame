@@ -35,5 +35,5 @@ error :: proc(format: string, args: ..any, loc := #caller_location) {
 panic :: proc(format: string, args: ..any, loc := #caller_location) {
     fmt_string := fmt.aprintf(format, ..args)
 
-    fmt.panicf("[panic at %s] %s", fmt_string, loc.procedure)
+    fmt.panicf("[panic at %s] %s", loc.procedure, fmt_string)
 }
