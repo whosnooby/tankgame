@@ -57,7 +57,6 @@ create_renderer :: proc(state: ^State) -> (renderer: ^SDL.Renderer, ok: bool) {
     name := SDL.GetRendererName(renderer)
     log.info("created renderer: %s", name)
 
-
     return
 }
 
@@ -66,6 +65,8 @@ create_render_target :: proc(state: ^State) -> (target: ^SDL.Texture, ok: bool) 
     if !ok {
         log.panic("failed to create render target texture")
     }
+
+    SDL.SetTextureScaleMode(target, .NEAREST)
 
     return
 }
