@@ -1,7 +1,7 @@
 package engine
 
+import gfx "gfx"
 import log "logging"
-import render "renderer"
 
 import SDL "vendor:sdl3"
 
@@ -61,7 +61,7 @@ create_renderer :: proc(state: ^State) -> (renderer: ^SDL.Renderer, ok: bool) {
 }
 
 create_render_target :: proc(state: ^State) -> (target: ^SDL.Texture, ok: bool) {
-    target, ok = render.create_blank_texture(state.renderer, [2]i32{ SCREEN_WIDTH, SCREEN_HEIGHT })
+    target, ok = gfx.create_blank_texture(state.renderer, [2]i32{ SCREEN_WIDTH, SCREEN_HEIGHT })
     if !ok {
         log.panic("failed to create render target texture")
     }

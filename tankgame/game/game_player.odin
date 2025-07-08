@@ -2,7 +2,7 @@ package game
 
 import engine "../engine"
 import log "../engine/logging"
-import renderer "../engine/renderer"
+import gfx "../engine/gfx"
 
 import SDL "vendor:sdl3"
 
@@ -60,11 +60,11 @@ create_player :: proc(estate: ^engine.State) -> (player: Player) {
     player.rendering = true
     player.speed = 100.0
 
-    if texture, ok := renderer.create_texture_from_image(estate.renderer, "resources/player.bmp"); ok {
+    if texture, ok := gfx.create_texture_from_image(estate.renderer, "resources/player.bmp"); ok {
         player.texture = texture
     } else {
         log.warn("falling back to solid color player texture")
-        texture, ok := renderer.create_solid_texture(estate.renderer, { 16, 16 }, { 255, 0, 255, 255 })
+        texture, ok := gfx.create_solid_texture(estate.renderer, { 16, 16 }, { 255, 0, 255, 255 })
         player.texture = texture
         if !ok {
             log.panic("failed to load/generate player texture")

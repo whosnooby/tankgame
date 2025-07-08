@@ -1,9 +1,9 @@
 package main
 
 import log "engine/logging"
-import renderer "engine/renderer"
 import "game"
 import "engine"
+import "engine/gfx"
 
 import fmt "core:fmt"
 import SDL "vendor:sdl3"
