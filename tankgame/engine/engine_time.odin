@@ -21,7 +21,7 @@ Time :: struct {
 }
 
 time_print_timings :: proc(time: ^Time) {
-    log.trace("fps:%d, tps:%d", time.last_fps, time.last_tps)
+    log.app_trace("fps:%d, tps:%d", time.last_fps, time.last_tps)
 }
 
 time_init :: proc(tick_rate: uint) -> (time: Time) {

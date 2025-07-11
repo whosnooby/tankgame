@@ -8,10 +8,15 @@ import "core:reflect"
 // this system is inspired by Valve's CVar system
 
 CVarChangeCallback :: #type proc(^State, ^CVar)
+CVarValue :: union {
+    ^uint,
+    ^f32,
+    ^string,
+}
 
 CVar :: struct {
     name: string,
-    value: any,
+    value: CVarValue,
     value_type: typeid,
     on_change: CVarChangeCallback,
 }
@@ -23,79 +28,66 @@ CVars :: enum {
 }
 
 initialize_engine_cvars :: proc(state: ^State) -> ^State {
-    state.cvars[.SV_TICKRATE] = construct_cvar(
+    append_cvar(
+        state, .SV_TICKRATE,
         "sv_tickrate",
-        state.time.tick_rate,
+        &state.time.tick_rate,
         time_update_tick_rate
     ) 
 
     return state
 }
 
-setup_game_cvar :: proc(state: ^State, cvar: CVars, value: CVar) -> ^State {
-    state.cvars[cvar] = value
+append_cvar :: proc(
+    state: ^State, cvar: CVars,
+    name: string, value: CVarValue, on_change: CVarChangeCallback
+) -> ^CVar {
+    state.cvar_names[cvar] = name
 
-    return state
-}
+    value_type := reflect.union_variant_typeid(value)
 
-construct_cvar :: proc(
-    name: string, value: any, on_change: CVarChangeCallback
-) -> CVar {
-    _, id := reflect.any_data(value)
-    return {
-        name = name,
+    state.cvars[cvar] = {
+        name = state.cvar_names[cvar],
         value = value,
-        value_type = id,
+        value_type = value_type,
         on_change = on_change
     }
+
+    return &state.cvars[cvar]
 }
 
 print_cvars :: proc(state: ^State, message_format: cstring = nil, message_args: ..any) {
     if message_format != nil {
-        log.trace(string(message_format), ..message_args)
+        log.console_trace(string(message_format), ..message_args)
     }
 
     for cvar in state.cvars {
-        log.trace("  %s = %s(%v)", cvar.name, cvar.value_type, cvar.value)
+        value, ok := get_cvar_value_as_any(cvar)
+        if !ok do log.console_trace("  %s = ???", cvar.name)
+        else do log.console_trace("  %s = %v", cvar.name, value)
     }
 }
 
-set_cvar_value :: proc(state: ^State, cvar: CVars, value: any) {
+set_cvar_value :: proc(state: ^State, cvar: CVars, value: CVarValue) {
     var := &state.cvars[cvar]
     var.value = value
+
     if var.on_change != nil do var.on_change(state, var)
 }
 
-get_cvar_value :: proc(state: ^State, cvar: CVars, $T: typeid) -> (T, bool) {
-    value := &state.cvars[cvar].value
+get_cvar_value_from_state :: proc(state: ^State, cvar: CVars) -> (any, bool) {
+    return get_cvar_value_as_any(state.cvars[cvar])
+}
 
-    switch $T {
-        case bool:
-            return reflect.as_bool(value^)
-        case []byte:
-            return reflect.as_bytes(value^), true
-        case f32:
-            val, ok := reflect.as_f64(value^)
-            return f32(val), ok
-        case f64:
-            return reflect.as_f64(value^)
-        case i32:
-            val, ok := reflect.as_int(value^)
-            return i32(val), ok
-        case i64:
-            return reflect.as_i64(value^)
-        case int:
-            return reflect.as_int(value^)
-        case rawptr:
-            return reflect.as_pointer(value^)
-        case string:
-            return reflect.as_string(value^)
-        case u32:
-            val, ok := reflect.as_uint(value^)
-            return u32(val), ok
-        case u64:
-            return reflect.as_u64(value^)
-        case uint:
-            return reflect.as_uint(value^)
+get_cvar_value_as_any :: proc(cvar: CVar) -> (any, bool) {
+    switch value in cvar.value {
+        case ^uint:
+            return value^, true
+        case ^f32:
+            return value^, true
+        case ^string:
+            return value^, true
+        case:
+            return nil, false
     }
 }

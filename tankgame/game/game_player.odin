@@ -63,11 +63,11 @@ create_player :: proc(estate: ^engine.State) -> (player: Player) {
     if texture, ok := gfx.create_texture_from_image(estate.renderer, "resources/player.bmp"); ok {
         player.texture = texture
     } else {
-        log.warn("falling back to solid color player texture")
+        log.render_warn("falling back to solid color player texture")
         texture, ok := gfx.create_solid_texture(estate.renderer, { 16, 16 }, { 255, 0, 255, 255 })
         player.texture = texture
         if !ok {
-            log.panic("failed to load/generate player texture")
+            log.render_panic("failed to load/generate player texture")
         }
     }
     return
@@ -134,7 +134,7 @@ handle_player_movement :: proc(player: ^Player, event: ^SDL.Event) {
     }
 
     if player.active_direction_count > 4 {
-        log.warn("attempted to use fifth movement direction. how??")
+        log.input_warn("attempted to use fifth movement direction. how??")
         return
     }
 
@@ -186,6 +186,6 @@ render_player :: proc(state: ^engine.State, player: ^Player) {
 
     rect := get_player_rect(player)
     if !SDL.RenderTexture(state.renderer, player.texture, nil, &rect) {
-        log.error("failed to render player: %s", SDL.GetError())
+        log.render_error("failed to render player: %s", SDL.GetError())
     }
 }

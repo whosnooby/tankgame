@@ -1,5 +1,6 @@
 package main
 
+import "base:runtime"
 import log "engine/logging"
 import "game"
 import "engine"
@@ -20,16 +21,17 @@ set_app_metadata :: proc() {
 
     for property, value in metadata {
         if !SDL.SetAppMetadataProperty(property, value) {
-            log.error("failed to set app property '%s': %s", property, SDL.GetError())
+            log.app_error("failed to set app property '%s': %s", property, SDL.GetError())
         }
     }
 }
+
 
 main :: proc() {
     fmt.println("hello, world!")
 
     if ok := SDL.Init({ .VIDEO, }); !ok {
-        log.panic("no SDL, major L")
+        log.app_panic("no SDL, major L")
         return
     }
 
@@ -38,17 +40,31 @@ main :: proc() {
 
     estate.time = engine.time_init(64)
 
+    SDL.SetLogOutputFunction(engine.console_logfn, &estate.console)
+    SDL.SetLogPriorities(.TRACE)
+
+    if console, ok := engine.create_console(&estate); ok {
+        estate.console = console
+    } else {
+        log.app_panic("failed to create console")
+        return
+    }
+
+
     if window, ok := engine.create_window(); ok {
         estate.window = window
     } else {
         return
     }
 
+    engine.resize_console(&estate)
+
     if renderer, ok := engine.create_renderer(&estate); ok {
         estate.renderer = renderer
     } else {
         return
     }
+    engine.create_console_text_engine(&estate)
 
     if target, ok := engine.create_render_target(&estate); ok {
         estate.render_target = target

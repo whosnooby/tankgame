@@ -53,7 +53,7 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
             #partial switch event.type {
                 case .WINDOW_EXPOSED:
                     if event.window.data1 == 1 {
-                        log.trace("redrawing render target to fit new size")
+                        log.render_trace("redrawing render target to fit new size")
                         render_game_to_window(estate)
                     }
                 case .QUIT:
@@ -77,7 +77,11 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
 
         update_player(&player, &time)
 
-        render_game(estate, gstate)        
+        render_game(estate, gstate)
+
+        // estate.rendering_console = true
+        // engine.render_console(estate)
+
         render_game_to_window(estate)
     }
 }

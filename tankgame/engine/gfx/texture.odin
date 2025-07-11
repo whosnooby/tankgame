@@ -19,11 +19,11 @@ create_blank_texture :: proc(
     texture: ^SDL.Texture,
     ok: bool
 ) {
-    log.trace("creating empty texture (w: %d, h: %d)", size.x, size.y)
+    log.render_trace("creating empty texture (w: %d, h: %d)", size.x, size.y)
     texture = SDL.CreateTexture(renderer, .RGBA32, .TARGET, size.x, size.y)
     ok = texture != nil
     if !ok {
-        log.error("failed to create texture: %s", SDL.GetError())
+        log.render_error("failed to create texture: %s", SDL.GetError())
     }
     return
 }
@@ -42,13 +42,13 @@ create_solid_texture :: proc(
     color := u32_color_from_rgba(color)
     SDL.FillSurfaceRect(surface, nil, color)
 
-    log.trace("creating solid color texture (w: %d, h: %d) 0x%x",
+    log.render_trace("creating solid color texture (w: %d, h: %d) 0x%x",
         size.x, size.y, color 
     )
     texture = SDL.CreateTextureFromSurface(renderer, surface)
     ok = texture != nil
     if !ok {
-        log.error("failed to create texture: %s", SDL.GetError())
+        log.render_error("failed to create texture: %s", SDL.GetError())
     }
     return
 }
@@ -59,18 +59,18 @@ create_texture_from_image :: proc(renderer: ^SDL.Renderer, path: cstring) -> (te
 
     ok = surface != nil
     if !ok {
-        log.error("failed to load image %s: %s", path, SDL.GetError())
+        log.render_error("failed to load image %s: %s", path, SDL.GetError())
         return nil, ok
     }
 
-    log.trace("creating texture (w: %d, h: %d) from image %s",
+    log.render_trace("creating texture (w: %d, h: %d) from image %s",
         surface.w, surface.h, path
     )
     texture = SDL.CreateTextureFromSurface(renderer, surface)
 
     ok = texture != nil
     if !ok {
-        log.error("failed to create texture: %s", SDL.GetError())
+        log.render_error("failed to create texture: %s", SDL.GetError())
     }
     return
 }
