@@ -47,7 +47,7 @@ create_console :: proc(state: ^State) -> (console: Console, ok: bool) {
     }
 
     console = {
-        content = strings.builder_make(),
+        // content = strings.builder_make(),
         font = TTF.OpenFont("resources/whitrabt.ttf", 15.0),
         input_handler = default_console_input_handler
     }
@@ -80,18 +80,22 @@ console_logfn :: proc "c" (
 ) {
     context = rt.default_context()
 
-    str := fmt.aprintfln("[%s][%s] %s", priority, category, message)
-    defer delete(str)
+    when false {
+        str := fmt.aprintfln("[%s][%s] %s", priority, category, message)
+        defer delete(str)
 
-    fmt.print(str)
+        fmt.print(str)
+    } else {
+        fmt.printfln("[%s][%s] %s", priority, category, message)
+    }
 
     console := (^Console)(userdata)
-    strings.write_string(&console.content, str)
+    // strings.write_string(&console.content, str)
 }
 
 push_string_to_console :: proc(console: ^Console, str: string) {
     fmt.println(str)
-    strings.write_string(&console.content, str)
+    // strings.write_string(&console.content, str)
 }
 
 console_write_callback :: proc(state: ^State) {
