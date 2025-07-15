@@ -6,7 +6,7 @@ import gfx "../engine/gfx"
 
 import SDL "vendor:sdl3"
 
-PlayerMoveDirection :: enum {
+MoveDirection :: enum i32 {
     NONE  = 0,
     NORTH = 1,
     WEST  = 2,
@@ -14,7 +14,7 @@ PlayerMoveDirection :: enum {
     EAST  = 4,
 }
 
-PlayerMoveVectors :: [PlayerMoveDirection]engine.vec2 {
+MoveVectors :: [MoveDirection]engine.vec2 {
     .NONE = engine.vec2_ZERO,
     .NORTH = engine.vec2_UP,
     .WEST = engine.vec2_LEFT,
@@ -22,7 +22,7 @@ PlayerMoveVectors :: [PlayerMoveDirection]engine.vec2 {
     .EAST = engine.vec2_RIGHT,
 }
 
-direction_is_opposite_of :: proc(dir, other: PlayerMoveDirection) -> bool {
+direction_is_opposite_of :: proc(dir, other: MoveDirection) -> bool {
     if dir == .NONE || other == .NONE do return false 
 
     if int(dir) % 2 == 0 && int(other) % 2 == 0 do return true
@@ -31,7 +31,7 @@ direction_is_opposite_of :: proc(dir, other: PlayerMoveDirection) -> bool {
     return false
 }
 
-direction_opposite :: proc(dir: PlayerMoveDirection) -> PlayerMoveDirection {
+direction_opposite :: proc(dir: MoveDirection) -> MoveDirection {
     switch dir {
         case .NORTH: return .SOUTH
         case .WEST:  return .EAST
@@ -46,8 +46,12 @@ direction_opposite :: proc(dir: PlayerMoveDirection) -> PlayerMoveDirection {
 Player :: struct {
     position: engine.vec2,
     speed: f32,
-    directions: [4]PlayerMoveDirection,
+    directions: [4]MoveDirection,
     active_direction_count: int,
+
+    forward: MoveDirection,
+
+    should_shoot: bool,
     
 
     texture: ^SDL.Texture,
@@ -59,6 +63,7 @@ create_player :: proc(estate: ^engine.State) -> (player: Player) {
     player.position = { 100, 100 }
     player.rendering = true
     player.speed = 100.0
+    player.forward = .NORTH
 
     if texture, ok := gfx.create_texture_from_image(estate.renderer, "resources/player.bmp"); ok {
         player.texture = texture
@@ -84,7 +89,7 @@ get_player_rect :: proc(player: ^Player) -> SDL.FRect {
     }
 }
 
-does_player_handle :: proc(event: ^SDL.Event) -> bool {
+does_player_handle :: proc(event: SDL.Event) -> bool {
     #partial switch event.type {
         case .KEY_DOWN:
             return true
@@ -100,7 +105,7 @@ does_player_handle :: proc(event: ^SDL.Event) -> bool {
 }
 
 @(private="file")
-get_keyboard_move_direction :: proc(event: ^SDL.KeyboardEvent) -> PlayerMoveDirection {
+get_keyboard_move_direction :: proc(event: SDL.KeyboardEvent) -> MoveDirection {
     #partial switch event.scancode {
         case .W:
             return .NORTH
@@ -115,7 +120,28 @@ get_keyboard_move_direction :: proc(event: ^SDL.KeyboardEvent) -> PlayerMoveDire
     }
 }
 
-handle_player_movement :: proc(player: ^Player, event: ^SDL.Event) {
+handle_player_input :: proc(gstate: ^State, event: SDL.Event) {
+    if event.key.down && !event.key.repeat && event.key.scancode == .SPACE {
+        player_shoot(gstate)
+    }
+
+    handle_player_movement(&gstate.player, event)
+}
+
+player_shoot :: proc(gstate: ^State) {
+    player := &gstate.player
+    dir_vectors := MoveVectors
+
+    adjustment: f32 = 1.0
+    spawn_pos := player.position + dir_vectors[player.forward] * adjustment
+
+    player.should_shoot = false
+    if !bullet_spawn_from_pool(&gstate.bullet_pool, gstate.player.forward, spawn_pos) {
+        player.should_shoot = true
+    }
+}
+
+handle_player_movement :: proc(player: ^Player, event: SDL.Event) {
     // if event.type & (.GAMEPAD_BUTTON_DOWN | .GAMEPAD_BUTTON_UP) != {} {
     //     log.warn("ignoring gamepad input")
     //     return
@@ -126,7 +152,7 @@ handle_player_movement :: proc(player: ^Player, event: ^SDL.Event) {
     }
 
     // get desired move direction from keyboard
-    direction := get_keyboard_move_direction(&event.key)
+    direction := get_keyboard_move_direction(event.key)
 
     // do nothing if we don't want to change directions
     if (direction == .NONE) {
@@ -141,9 +167,9 @@ handle_player_movement :: proc(player: ^Player, event: ^SDL.Event) {
     if event.key.down {
         // log.trace("adding %v to player.directions at index %d", direction, player.active_direction_count)
         player.directions[player.active_direction_count] = direction
+        player.forward = direction
 
         player.active_direction_count += 1
-
         return
     }
 
@@ -164,18 +190,26 @@ handle_player_movement :: proc(player: ^Player, event: ^SDL.Event) {
     }
     // log.trace(" player.directions: %v", player.directions)
     player.active_direction_count -= 1
+
+    if player.active_direction_count > 0 {
+        player.forward = player.directions[player.active_direction_count - 1]
+    }
 }
 
-tick_player :: proc(player: ^Player) {
-
+player_tick :: proc(player: ^Player) {
+    
 }
 
-update_player :: proc(player: ^Player, time: ^engine.Time) {
+update_player :: proc(gstate: ^State, player: ^Player, time: ^engine.Time) {
+    if player.should_shoot {
+        player_shoot(gstate)
+    }
+
     if player.active_direction_count == 0 {
         return
     }
-    vectors := PlayerMoveVectors
-    direction := vectors[player.directions[player.active_direction_count - 1]]
+    vectors := MoveVectors
+    direction := vectors[player.forward]
     player.position += direction * player.speed * time.delta_seconds
 }
 

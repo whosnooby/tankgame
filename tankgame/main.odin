@@ -72,7 +72,7 @@ main :: proc() {
         return
     }
 
-    gstate.player = game.create_player(&estate)
+    game.game_init(&gstate, &estate)
 
     estate = engine.initialize_engine_cvars(&estate)^
     estate = game.add_game_cvars(&estate, &gstate)^
@@ -81,6 +81,6 @@ main :: proc() {
 
     game.main_loop(&estate, &gstate)
 
+    game.game_cleanup(&gstate)
     engine.cleanup_state(&estate)
-    game.cleanup_player(&gstate.player)
 }

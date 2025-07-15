@@ -7,13 +7,13 @@ import SDL "vendor:sdl3"
 
 import math "core:math"
 
-render_game :: proc(estate: ^engine.State, gstate: ^State) {
+render_game_to_target :: proc(estate: ^engine.State, gstate: ^State) {
     SDL.SetRenderTarget(estate.renderer, estate.render_target)
 
-    SDL.SetRenderDrawColor(estate.renderer, 100, 0, 0, 255)
+    SDL.SetRenderDrawColor(estate.renderer, 0, 0, 0, 255)
     SDL.RenderClear(estate.renderer)
 
-    render_player(estate, &gstate.player)
+    game_render(gstate, estate)
 }
 
 render_game_to_window :: proc(estate: ^engine.State) {
@@ -60,8 +60,8 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
                     return
             }
 
-            if does_player_handle(&event) {
-                handle_player_movement(&player, &event)
+            if does_player_handle(event) {
+                handle_player_input(gstate, event)
             }
         }
 
@@ -71,17 +71,13 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
 
         time = engine.time_start_ticks(&time)^
         for engine.time_tick(&time) {
-            tick_player(&player)
+            game_tick(gstate)
         }
         time = engine.time_end_ticks(&time)^
 
-        update_player(&player, &time)
+        game_update(gstate, &time)
 
-        render_game(estate, gstate)
-
-        // estate.rendering_console = true
-        // engine.render_console(estate)
-
+        render_game_to_target(estate, gstate)
         render_game_to_window(estate)
     }
 }
