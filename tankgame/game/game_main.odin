@@ -25,14 +25,17 @@ render_game_to_window :: proc(estate: ^engine.State) {
     draw_width, draw_height: i32
     SDL.GetRenderOutputSize(estate.renderer, &draw_width, &draw_height)
 
+    // code from:
+    // https://blog.roboblob.com/2013/07/27/solving-resolution-independent-rendering-and-2d-camera-using-monogame/
+
     targetAspectRatio := f32(engine.SCREEN_WIDTH) / f32(engine.SCREEN_HEIGHT);
     width := draw_width
     height := i32(f32(width) / targetAspectRatio + 0.5);
     if (height > draw_height) {
         height = draw_height;
-        // PillarBox
         width = i32(f32(height) * targetAspectRatio + 0.5);
     }
+
     dstrect: SDL.FRect = {
         x = f32(draw_width / 2) - f32(width / 2),
         y = f32(draw_height / 2) - f32(height / 2),
