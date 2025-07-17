@@ -80,13 +80,15 @@ console_logfn :: proc "c" (
 ) {
     context = rt.default_context()
 
+    log_category := (log.LogCategory)(category)
+    
     when false {
-        str := fmt.aprintfln("[%s][%s] %s", priority, category, message)
+        str := fmt.aprintfln("[%s][%s] %s", priority, log_category, message)
         defer delete(str)
 
         fmt.print(str)
     } else {
-        fmt.printfln("[%s][%s] %s", priority, category, message)
+        fmt.printfln("[%s][%s] %s", priority, log_category, message)
     }
 
     console := (^Console)(userdata)
