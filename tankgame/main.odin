@@ -72,6 +72,9 @@ main :: proc() {
         return
     }
 
+    engine.init_physics(&estate)
+    estate.wireframe_mode = .WIREFRAME
+
     game.game_init(&gstate, &estate)
 
     estate = engine.initialize_engine_cvars(&estate)^

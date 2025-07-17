@@ -2,6 +2,7 @@ package game
 
 import engine "../engine"
 import log "../engine/logging"
+import phys "../engine/physics"
 
 import SDL "vendor:sdl3"
 
@@ -13,7 +14,13 @@ render_game_to_target :: proc(estate: ^engine.State, gstate: ^State) {
     SDL.SetRenderDrawColor(estate.renderer, 0, 0, 0, 255)
     SDL.RenderClear(estate.renderer)
 
-    game_render(gstate, estate)
+    if estate.wireframe_mode != .ONLY_WIREFRAME {
+        game_render(gstate, estate)
+    }
+
+    if estate.wireframe_mode != .NO_WIREFRAME {
+        phys.render_wireframes(estate.renderer, estate.physics_state)
+    }
 }
 
 render_game_to_window :: proc(estate: ^engine.State) {
@@ -74,6 +81,9 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
 
         time = engine.time_start_ticks(&time)^
         for engine.time_tick(&time) {
+            game_prepare_physics(gstate)
+
+            phys.tick(&physics_state)
             game_tick(gstate)
         }
         time = engine.time_end_ticks(&time)^

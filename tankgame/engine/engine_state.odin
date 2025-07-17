@@ -2,6 +2,7 @@ package engine
 
 import gfx "gfx"
 import log "logging"
+import phys "physics"
 
 import SDL "vendor:sdl3"
 
@@ -11,6 +12,9 @@ State :: struct {
     render_target: ^SDL.Texture,
     event : SDL.Event,
     time: Time,
+
+    physics_state: phys.State,
+    wireframe_mode: enum { NO_WIREFRAME, WIREFRAME, ONLY_WIREFRAME },
 
     rendering_console: bool,
     console: Console,
@@ -84,6 +88,10 @@ query_render_drivers :: proc() {
 
         log.render_info("  - driver %d: %s", i, driver_name)
     }
+}
+
+init_physics :: proc (state: ^State) {
+    phys.physics_state_init(&state.physics_state)
 }
 
 cleanup_state :: proc(state: ^State) {

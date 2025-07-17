@@ -18,7 +18,8 @@ LogCategory :: enum i32 {
 	TEST        = i32(SDL.LogCategory.TEST),
 	GPU         = i32(SDL.LogCategory.GPU),
 
-    CONSOLE      = i32(SDL.LogCategory.CUSTOM),
+    CONSOLE     = i32(SDL.LogCategory.CUSTOM),
+    PHYSICS,
     CUSTOM,
 }
 
@@ -174,4 +175,32 @@ console_error :: proc(msg: string, args: ..any) {
 
 console_panic :: proc(msg: string, args: ..any, loc := #caller_location) {
     panic_message(.CONSOLE, loc, msg, ..args)
+}
+
+physics_trace :: proc(msg: string, args: ..any) {
+    log_message(.TRACE, .PHYSICS, msg, ..args)
+}
+
+physics_verbose :: proc(msg: string, args: ..any) {
+    log_message(.VERBOSE, .PHYSICS, msg, ..args)
+}
+
+physics_debug :: proc(msg: string, args: ..any) {
+    log_message(.DEBUG, .PHYSICS, msg, ..args)
+}
+
+physics_info :: proc(msg: string, args: ..any) {
+    log_message(.INFO, .PHYSICS, msg, ..args)
+}
+
+physics_warn :: proc(msg: string, args: ..any) {
+    log_message(.WARN, .PHYSICS, msg, ..args)
+}
+
+physics_error :: proc(msg: string, args: ..any) {
+    log_message(.ERROR, .PHYSICS, msg, ..args)
+}
+
+physics_panic :: proc(msg: string, args: ..any, loc := #caller_location) {
+    panic_message(.PHYSICS, loc, msg, ..args)
 }

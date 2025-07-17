@@ -1,8 +1,9 @@
 package game
 
 import engine "../engine"
-import log "../engine/logging"
 import gfx "../engine/gfx"
+import log "../engine/logging"
+import phys "../engine/physics"
 
 import SDL "vendor:sdl3"
 
@@ -52,10 +53,11 @@ Player :: struct {
     forward: MoveDirection,
 
     should_shoot: bool,
-    
 
     texture: ^SDL.Texture,
     rendering: bool,
+
+    collider: ^phys.Collider
 }
 
 
@@ -75,14 +77,26 @@ create_player :: proc(estate: ^engine.State) -> (player: Player) {
             log.render_panic("failed to load/generate player texture")
         }
     }
+
+    collider := phys.reserve_dynamic_collider(&estate.physics_state)
+    if collider == nil {
+        log.physics_panic("failed to allocate a physics collider to player")
+    }
+    player.collider = collider
+    phys.collider_init_dynamic(player.collider, get_player_rect(player))
+
     return
+}
+
+player_update_collider :: proc(player: ^Player) {
+    phys.collider_update_dynamic(player.collider, get_player_rect(player^))
 }
 
 cleanup_player :: proc(player: ^Player) {
     SDL.DestroyTexture(player.texture)
 }
 
-get_player_rect :: proc(player: ^Player) -> SDL.FRect {
+get_player_rect :: proc(player: Player) -> SDL.FRect {
     return {
         x = f32(player.position.x), y = f32(player.position.y),
         w = f32(player.texture.w), h = f32(player.texture.h)
@@ -218,7 +232,7 @@ render_player :: proc(state: ^engine.State, player: ^Player) {
         return
     }
 
-    rect := get_player_rect(player)
+    rect := get_player_rect(player^)
     if !SDL.RenderTexture(state.renderer, player.texture, nil, &rect) {
         log.render_error("failed to render player: %s", SDL.GetError())
     }
