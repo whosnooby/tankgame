@@ -1,11 +1,11 @@
+/// This system is inspired by Valve's ConVar system
+
 package engine
 
 import log "logging"
 
 import "core:fmt"
 import "core:reflect"
-
-// this system is inspired by Valve's CVar system
 
 CVarChangeCallback :: #type proc(^State, ^CVar)
 CVarValue :: union {
@@ -27,21 +27,16 @@ CVars :: enum {
     SV_PLAYER_SPEED,
 }
 
-initialize_engine_cvars :: proc(state: ^State) -> ^State {
+initialize_engine_cvars :: proc(state: ^State) {
     append_cvar(
         state, .SV_TICKRATE,
         "sv_tickrate",
         &state.time.tick_rate,
-        time_update_tick_rate
+        update_time_tick_rate
     ) 
-
-    return state
 }
 
-append_cvar :: proc(
-    state: ^State, cvar: CVars,
-    name: string, value: CVarValue, on_change: CVarChangeCallback
-) -> ^CVar {
+append_cvar :: proc(state: ^State, cvar: CVars, name: string, value: CVarValue, on_change: CVarChangeCallback) {
     state.cvar_names[cvar] = name
 
     value_type := reflect.union_variant_typeid(value)
@@ -52,8 +47,6 @@ append_cvar :: proc(
         value_type = value_type,
         on_change = on_change
     }
-
-    return &state.cvars[cvar]
 }
 
 print_cvars :: proc(state: ^State, message_format: cstring = nil, message_args: ..any) {

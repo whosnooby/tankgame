@@ -1,12 +1,10 @@
 package main
 
-import "base:runtime"
-import log "engine/logging"
 import "game"
 import "engine"
 import "engine/gfx"
+import log "engine/logging"
 
-import fmt "core:fmt"
 import SDL "vendor:sdl3"
 
 set_app_metadata :: proc() {
@@ -28,62 +26,9 @@ set_app_metadata :: proc() {
 
 
 main :: proc() {
-    fmt.println("hello, world!")
-
-    if ok := SDL.Init({ .VIDEO, }); !ok {
-        log.app_panic("no SDL, major L")
-        return
-    }
-
-    estate := engine.State {}
-    gstate := game.State {}
-
-    estate.time = engine.time_init(64)
-
-    SDL.SetLogOutputFunction(engine.console_logfn, &estate.console)
-    SDL.SetLogPriorities(.TRACE)
-
-    if console, ok := engine.create_console(&estate); ok {
-        estate.console = console
-    } else {
-        log.app_panic("failed to create console")
-        return
-    }
-
-
-    if window, ok := engine.create_window(); ok {
-        estate.window = window
-    } else {
-        return
-    }
-
-    engine.resize_console(&estate)
-
-    if renderer, ok := engine.create_renderer(&estate); ok {
-        estate.renderer = renderer
-    } else {
-        return
-    }
-    engine.create_console_text_engine(&estate)
-
-    if target, ok := engine.create_render_target(&estate); ok {
-        estate.render_target = target
-    } else {
-        return
-    }
-
-    engine.init_physics(&estate)
-    estate.wireframe_mode = .WIREFRAME
-
-    game.game_init(&gstate, &estate)
-
-    estate = engine.initialize_engine_cvars(&estate)^
-    estate = game.add_game_cvars(&estate, &gstate)^
-
-    engine.print_cvars(&estate, "initialized cvars:")
-
+    estate, gstate := game.create_game()
     game.main_loop(&estate, &gstate)
 
-    game.game_cleanup(&gstate)
+    game.cleanup_state(&gstate)
     engine.cleanup_state(&estate)
 }

@@ -1,9 +1,9 @@
 package game
 
-import engine "../engine"
-import gfx "../engine/gfx"
+import "../engine"
+import "../engine/collider/aabb"
+import "../engine/gfx"
 import log "../engine/logging"
-import phys "../engine/physics"
 
 import SDL "vendor:sdl3"
 
@@ -32,7 +32,7 @@ direction_is_opposite_of :: proc(dir, other: MoveDirection) -> bool {
     return false
 }
 
-direction_opposite :: proc(dir: MoveDirection) -> MoveDirection {
+opposite_direction :: proc(dir: MoveDirection) -> MoveDirection {
     switch dir {
         case .NORTH: return .SOUTH
         case .WEST:  return .EAST
@@ -57,7 +57,7 @@ Player :: struct {
     texture: ^SDL.Texture,
     rendering: bool,
 
-    collider: ^phys.Collider
+    collider: ^aabb.AABB
 }
 
 
@@ -78,18 +78,18 @@ create_player :: proc(estate: ^engine.State) -> (player: Player) {
         }
     }
 
-    collider := phys.reserve_dynamic_collider(&estate.physics_state)
+    collider := aabb.get_aabb_from_pool(&estate.aabb_pool)
     if collider == nil {
         log.physics_panic("failed to allocate a physics collider to player")
     }
     player.collider = collider
-    phys.collider_init_dynamic(player.collider, get_player_rect(player))
+    aabb.init_aabb(player.collider, get_player_rect(player))
 
     return
 }
 
-player_update_collider :: proc(player: ^Player) {
-    phys.collider_update_dynamic(player.collider, get_player_rect(player^))
+update_player_collider :: proc(player: ^Player) {
+    aabb.set_aabb_area(player.collider, get_player_rect(player^))
 }
 
 cleanup_player :: proc(player: ^Player) {
@@ -136,13 +136,13 @@ get_keyboard_move_direction :: proc(event: SDL.KeyboardEvent) -> MoveDirection {
 
 handle_player_input :: proc(gstate: ^State, event: SDL.Event) {
     if event.key.down && !event.key.repeat && event.key.scancode == .SPACE {
-        player_shoot(gstate)
+        shoot_player_bullet(gstate)
     }
 
     handle_player_movement(&gstate.player, event)
 }
 
-player_shoot :: proc(gstate: ^State) {
+shoot_player_bullet :: proc(gstate: ^State) {
     player := &gstate.player
     dir_vectors := MoveVectors
 
@@ -150,7 +150,7 @@ player_shoot :: proc(gstate: ^State) {
     spawn_pos := player.position + dir_vectors[player.forward] * adjustment
 
     player.should_shoot = false
-    if !bullet_spawn_from_pool(&gstate.bullet_pool, gstate.player.forward, spawn_pos) {
+    if !spawn_bullet_from_pool(&gstate.bullet_pool, gstate.player.forward, spawn_pos) {
         player.should_shoot = true
     }
 }
@@ -210,13 +210,13 @@ handle_player_movement :: proc(player: ^Player, event: SDL.Event) {
     }
 }
 
-player_tick :: proc(player: ^Player) {
+tick_player :: proc(player: ^Player) {
     
 }
 
 update_player :: proc(gstate: ^State, player: ^Player, time: ^engine.Time) {
     if player.should_shoot {
-        player_shoot(gstate)
+        shoot_player_bullet(gstate)
     }
 
     if player.active_direction_count == 0 {

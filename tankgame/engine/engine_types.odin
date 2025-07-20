@@ -1,6 +1,6 @@
 package engine
 
-import math "core:math"
+import "core:math"
 
 vec2 :: distinct [2]f32
 vec3 :: distinct [3]f32

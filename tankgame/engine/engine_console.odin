@@ -1,6 +1,5 @@
 package engine
 
-import "core:odin/ast"
 import log "logging"
 
 import rt "base:runtime"
@@ -27,7 +26,6 @@ Console :: struct {
     content: strings.Builder,
 
     font: ^TTF.Font,
-    text_obj: ^TTF.Text,
     text_engine: ^TTF.TextEngine,
     text_surface: ^SDL.Surface,
     text_texture: ^SDL.Texture,
@@ -104,7 +102,7 @@ console_write_callback :: proc(state: ^State) {
     state.console.needs_redraw = true
 }
 
-console_set_cvar :: proc(state: ^State, cvar: CVars, args: string) {
+set_console_cvar :: proc(state: ^State, cvar: CVars, args: string) {
     var := &state.cvars[cvar]
     str := strings.trim(args, " \t")
 
@@ -143,7 +141,7 @@ default_console_input_handler :: proc(state: ^State, str: string) {
 
     for name, cvar in state.cvar_names {
         if strings.compare(name, command) == 0 {
-            console_set_cvar(state, cvar, args)
+            set_console_cvar(state, cvar, args)
         }
     }
 }
@@ -177,5 +175,10 @@ render_console :: proc(state: ^State) {
     SDL.RenderFillRect(state.renderer, &console.rect)
 
     render_console_text(console)
+}
+
+cleanup_console :: proc(console: ^Console) {
+    TTF.CloseFont(console.font)
+    TTF.DestroyRendererTextEngine(console.text_engine)
 }
 

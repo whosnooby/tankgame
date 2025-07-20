@@ -1,8 +1,8 @@
 package game
 
 import "../engine"
+import "../engine/gfx"
 import log "../engine/logging"
-import gfx "../engine/gfx"
 
 import SDL "vendor:sdl3"
 
@@ -49,13 +49,13 @@ init_bullet_pool :: proc(pool: ^BulletPool, estate: ^engine.State) {
     pool.bullet_texture = texture
 }
 
-bullet_pool_tick :: proc(pool: ^BulletPool) {
+tick_bullet_pool :: proc(pool: ^BulletPool) {
     for &bullet, i in pool.pool {
         bullet.ticks_left -= 1
         if bullet.ticks_left <= 0 { 
             if i not_in pool.free_slots {
                 pool.free_slots += { i }
-                bullet_make_inactive(&bullet)
+                inactivate_bullet(&bullet)
             }
             continue
         }
@@ -65,7 +65,7 @@ bullet_pool_tick :: proc(pool: ^BulletPool) {
     }
 }
 
-bullet_spawn_from_pool :: proc(
+spawn_bullet_from_pool :: proc(
     pool: ^BulletPool,
     direction: MoveDirection, position: engine.vec2
 ) -> bool {
@@ -99,7 +99,7 @@ bullet_spawn_from_pool :: proc(
     return true
 }
 
-bullet_pool_render_active :: proc(estate: ^engine.State, pool: BulletPool) {
+render_bullets :: proc(estate: ^engine.State, pool: BulletPool) {
     if card(pool.free_slots) == BulletPoolSize {
         return
     }
@@ -117,11 +117,11 @@ bullet_pool_render_active :: proc(estate: ^engine.State, pool: BulletPool) {
     }
 }
 
-bullet_pool_cleanup :: proc(pool: ^BulletPool) {
+cleanup_bullet_pool :: proc(pool: ^BulletPool) {
     SDL.DestroyTexture(pool.bullet_texture)
 }
 
-bullet_make_inactive :: proc(bullet: ^Bullet) {
+inactivate_bullet :: proc(bullet: ^Bullet) {
     bullet.ticks_left = 0
     bullet.direction = .NONE
     bullet.position = { -1, -1 }

@@ -1,12 +1,12 @@
 package game
 
-import engine "../engine"
+import "../engine"
+import "../engine/collider/aabb"
 import log "../engine/logging"
-import phys "../engine/physics"
+
+import "core:math"
 
 import SDL "vendor:sdl3"
-
-import math "core:math"
 
 render_game_to_target :: proc(estate: ^engine.State, gstate: ^State) {
     SDL.SetRenderTarget(estate.renderer, estate.render_target)
@@ -15,11 +15,11 @@ render_game_to_target :: proc(estate: ^engine.State, gstate: ^State) {
     SDL.RenderClear(estate.renderer)
 
     if estate.wireframe_mode != .ONLY_WIREFRAME {
-        game_render(gstate, estate)
+        render_state(gstate, estate)
     }
 
     if estate.wireframe_mode != .NO_WIREFRAME {
-        phys.render_wireframes(estate.renderer, estate.physics_state)
+        aabb.render_wireframes(estate.renderer, estate.aabb_pool)
     }
 }
 
@@ -54,6 +54,55 @@ render_game_to_window :: proc(estate: ^engine.State) {
     SDL.RenderPresent(estate.renderer)
 }
 
+create_game :: proc() -> (estate: engine.State, gstate: State) {
+    if ok := SDL.Init({ .VIDEO, }); !ok {
+        log.app_panic("no SDL, major L")
+        return
+    }
+
+    estate.time = engine.init_time(64)
+
+    SDL.SetLogOutputFunction(engine.console_logfn, &estate.console)
+    SDL.SetLogPriorities(.TRACE)
+
+    if console, ok := engine.create_console(&estate); ok {
+        estate.console = console
+    } else {
+        log.app_panic("failed to create console")
+        return
+    }
+
+    if window, ok := engine.create_window(); ok {
+        estate.window = window
+    } else {
+        return
+    }
+
+    engine.resize_console(&estate)
+
+    if renderer, ok := engine.create_renderer(&estate); ok {
+        estate.renderer = renderer
+    } else {
+        return
+    }
+    engine.create_console_text_engine(&estate)
+
+    if target, ok := engine.create_render_target(&estate); ok {
+        estate.render_target = target
+    } else {
+        return
+    }
+
+    init_game_state(&gstate, &estate)
+
+    engine.initialize_engine_cvars(&estate)
+    add_game_cvars(&estate, &gstate)
+
+    engine.print_cvars(&estate, "initialized cvars:")
+
+    return estate, gstate
+}
+
 main_loop :: proc(estate: ^engine.State, gstate: ^State) {
     for {
         using estate
@@ -75,20 +124,20 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
             }
         }
 
-        engine.time_frame(&time)
+        engine.time_previous_frame(&time)
 
         SDL.RenderClear(renderer)
 
-        time = engine.time_start_ticks(&time)^
-        for engine.time_tick(&time) {
-            game_prepare_physics(gstate)
+        engine.prepare_to_tick(&time)
+        for engine.should_tick(&time) {
+            update_dynamic_colliders(gstate)
 
-            phys.tick(&physics_state)
-            game_tick(gstate)
+            aabb.check_pool_intersections(&aabb_pool)
+            tick_state(gstate)
         }
-        time = engine.time_end_ticks(&time)^
+        engine.stop_ticking(&time)
 
-        game_update(gstate, &time)
+        update_state(gstate, &time)
 
         render_game_to_target(estate, gstate)
         render_game_to_window(estate)

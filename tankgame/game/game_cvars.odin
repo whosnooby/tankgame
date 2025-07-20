@@ -1,6 +1,6 @@
 package game
 
-import engine "../engine"
+import "../engine"
 import log "../engine/logging"
 
 import SDL "vendor:sdl3"

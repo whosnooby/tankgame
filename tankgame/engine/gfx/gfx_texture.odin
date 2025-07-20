@@ -12,13 +12,7 @@ u32_color_from_rgba :: proc(color: [4]u8) -> (rgba: u32) {
     return
 }
 
-create_blank_texture :: proc(
-    renderer: ^SDL.Renderer,
-    size: [2]i32
-) -> (
-    texture: ^SDL.Texture,
-    ok: bool
-) {
+create_blank_texture :: proc(renderer: ^SDL.Renderer, size: [2]i32) -> (texture: ^SDL.Texture, ok: bool) {
     log.render_trace("creating empty texture (w: %d, h: %d)", size.x, size.y)
     texture = SDL.CreateTexture(renderer, .RGBA32, .TARGET, size.x, size.y)
     ok = texture != nil
@@ -28,14 +22,7 @@ create_blank_texture :: proc(
     return
 }
 
-create_solid_texture :: proc(
-    renderer: ^SDL.Renderer,
-    size: [2]i32,
-    color: [4]u8
-) -> (
-    texture: ^SDL.Texture,
-    ok: bool
-) {
+create_solid_texture :: proc(renderer: ^SDL.Renderer, size: [2]i32, color: [4]u8) -> (texture: ^SDL.Texture, ok: bool) {
     surface := SDL.CreateSurface(size.x, size.y, .RGBA32)  
     defer SDL.DestroySurface(surface)
 

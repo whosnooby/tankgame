@@ -1,6 +1,7 @@
 package engine
 
 import log "logging"
+
 import SDL "vendor:sdl3"
 
 Time :: struct {
@@ -20,12 +21,12 @@ Time :: struct {
     on_second : proc(^Time)
 }
 
-time_print_timings :: proc(time: ^Time) {
+print_second_timings :: proc(time: ^Time) {
     log.app_trace("fps:%d, tps:%d", time.last_fps, time.last_tps)
 }
 
-time_init :: proc(tick_rate: uint) -> (time: Time) {
-    time = time_set_tick_rate(&time, tick_rate)^
+init_time :: proc(tick_rate: uint) -> (time: Time) {
+    set_time_tick_rate(&time, tick_rate)
 
     time.now = SDL.GetTicksNS()
     time.last_frame = time.now
@@ -36,18 +37,16 @@ time_init :: proc(tick_rate: uint) -> (time: Time) {
     return time
 }
 
-time_set_tick_rate :: proc(time: ^Time, tick_rate: uint) -> ^Time {
+set_time_tick_rate :: proc(time: ^Time, tick_rate: uint) {
     time.tick_rate = tick_rate
     time.ns_per_tick = 1e9 / tick_rate
-
-    return time
 }
 
-time_update_tick_rate :: proc(state: ^State, cvar: ^CVar) {
+update_time_tick_rate :: proc(state: ^State, cvar: ^CVar) {
     state.time.ns_per_tick = 1e9 / state.time.tick_rate
 }
 
-time_frame :: proc(time: ^Time) -> ^Time {
+time_previous_frame :: proc(time: ^Time) {
     time.now = SDL.GetTicksNS()
     time.delta = time.now - time.last_frame
     time.last_frame = time.now
@@ -68,17 +67,13 @@ time_frame :: proc(time: ^Time) -> ^Time {
     time.frames += 1
 
     time.delta_seconds = f32(f64(time.delta) / 1.0e9)
-    // log.trace("time.delta_seconds: %1.3f", time.delta_seconds)
-
-    return time
 }
 
-time_start_ticks :: proc(time: ^Time) -> ^Time {
+prepare_to_tick :: proc(time: ^Time) {
     time.tick_time = time.delta + time.tick_remainder
-    return time
 }
 
-time_tick :: proc(time: ^Time) -> bool {
+should_tick :: proc(time: ^Time) -> bool {
     if time.tick_time > u64(time.ns_per_tick) {
         time.ticks += 1 
         time.tick_time -= u64(time.ns_per_tick)
@@ -88,7 +83,6 @@ time_tick :: proc(time: ^Time) -> bool {
     return false
 }
 
-time_end_ticks :: proc (time: ^Time) -> ^Time {
+stop_ticking :: proc (time: ^Time) {
     time.tick_remainder = time.tick_time if time.tick_time > 0 else 0
-    return time
 }
