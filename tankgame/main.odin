@@ -26,7 +26,9 @@ set_app_metadata :: proc() {
 
 
 main :: proc() {
-    estate, gstate := game.create_game()
+    estate: engine.State
+    gstate: game.State
+    game.create_game(&estate, &gstate)
     game.main_loop(&estate, &gstate)
 
     game.cleanup_state(&gstate)

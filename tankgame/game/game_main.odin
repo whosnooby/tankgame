@@ -54,18 +54,19 @@ render_game_to_window :: proc(estate: ^engine.State) {
     SDL.RenderPresent(estate.renderer)
 }
 
-create_game :: proc() -> (estate: engine.State, gstate: State) {
+create_game :: proc(estate: ^engine.State, gstate: ^State) {
     if ok := SDL.Init({ .VIDEO, }); !ok {
         log.app_panic("no SDL, major L")
         return
     }
 
     estate.time = engine.init_time(64)
+    estate.wireframe_mode = .WIREFRAME
 
     SDL.SetLogOutputFunction(engine.console_logfn, &estate.console)
     SDL.SetLogPriorities(.TRACE)
 
-    if console, ok := engine.create_console(&estate); ok {
+    if console, ok := engine.create_console(estate); ok {
         estate.console = console
     } else {
         log.app_panic("failed to create console")
@@ -78,29 +79,27 @@ create_game :: proc() -> (estate: engine.State, gstate: State) {
         return
     }
 
-    engine.resize_console(&estate)
+    engine.resize_console(estate)
 
-    if renderer, ok := engine.create_renderer(&estate); ok {
+    if renderer, ok := engine.create_renderer(estate); ok {
         estate.renderer = renderer
     } else {
         return
     }
-    engine.create_console_text_engine(&estate)
+    engine.create_console_text_engine(estate)
 
-    if target, ok := engine.create_render_target(&estate); ok {
+    if target, ok := engine.create_render_target(estate); ok {
         estate.render_target = target
     } else {
         return
     }
 
-    init_game_state(&gstate, &estate)
+    init_game_state(gstate, estate)
 
-    engine.initialize_engine_cvars(&estate)
-    add_game_cvars(&estate, &gstate)
+    engine.initialize_engine_cvars(estate)
+    add_game_cvars(estate, gstate)
 
-    engine.print_cvars(&estate, "initialized cvars:")
-
-    return estate, gstate
+    engine.print_cvars(estate, "initialized cvars:")
 }
 
 main_loop :: proc(estate: ^engine.State, gstate: ^State) {
@@ -131,8 +130,8 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
         engine.prepare_to_tick(&time)
         for engine.should_tick(&time) {
             update_dynamic_colliders(gstate)
-
             aabb.check_pool_intersections(&aabb_pool)
+
             tick_state(gstate)
         }
         engine.stop_ticking(&time)
