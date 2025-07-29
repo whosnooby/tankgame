@@ -149,8 +149,10 @@ shoot_player_bullet :: proc(gstate: ^State) {
     player := &gstate.player
     dir_vectors := MoveVectors
 
-    adjustment: i32 = 1.0
-    spawn_pos := player.position + dir_vectors[player.forward] * adjustment
+    adjustment: i32 = engine.TILE_WIDTH / 2
+    player_center := player.position + { engine.TILE_WIDTH / 2, engine.TILE_HEIGHT / 2 }
+    half_bullet_size := BulletSize / 2 
+    spawn_pos := player_center - half_bullet_size + dir_vectors[player.forward] * adjustment
 
     player.should_shoot = false
     if !spawn_bullet_from_pool(&gstate.bullet_pool, gstate.player.forward, spawn_pos) {
