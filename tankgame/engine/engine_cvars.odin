@@ -10,7 +10,7 @@ import "core:reflect"
 CVarChangeCallback :: #type proc(^State, ^CVar)
 CVarValue :: union {
     ^uint,
-    ^f32,
+    ^i32,
     ^string,
 }
 
@@ -76,7 +76,7 @@ get_cvar_value_as_any :: proc(cvar: CVar) -> (any, bool) {
     switch value in cvar.value {
         case ^uint:
             return value^, true
-        case ^f32:
+        case ^i32:
             return value^, true
         case ^string:
             return value^, true

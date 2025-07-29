@@ -7,6 +7,8 @@ import "../engine/log"
 
 import SDL "vendor:sdl3"
 
+PlayerWireframeColor : [4]u8 : { 150, 100, 200, 255 }
+
 MoveDirection :: enum i32 {
     NONE  = 0,
     NORTH = 1,
@@ -15,12 +17,12 @@ MoveDirection :: enum i32 {
     EAST  = 4,
 }
 
-MoveVectors :: [MoveDirection]engine.vec2 {
-    .NONE = engine.vec2_ZERO,
-    .NORTH = engine.vec2_UP,
-    .WEST = engine.vec2_LEFT,
-    .SOUTH = engine.vec2_DOWN,
-    .EAST = engine.vec2_RIGHT,
+MoveVectors :: [MoveDirection]engine.vec2i {
+    .NONE = engine.vec2i_ZERO,
+    .NORTH = engine.vec2i_UP,
+    .WEST = engine.vec2i_LEFT,
+    .SOUTH = engine.vec2i_DOWN,
+    .EAST = engine.vec2i_RIGHT,
 }
 
 direction_is_opposite_of :: proc(dir, other: MoveDirection) -> bool {
@@ -45,8 +47,9 @@ opposite_direction :: proc(dir: MoveDirection) -> MoveDirection {
 }
 
 Player :: struct {
-    position: engine.vec2,
-    speed: f32,
+    position: engine.vec2i,
+    prev_position: engine.vec2i,
+    speed: i32,
     directions: [4]MoveDirection,
     active_direction_count: int,
 
@@ -58,13 +61,15 @@ Player :: struct {
     rendering: bool,
 
     collider: aabb.AABB,
+    tile_x, tile_y: int,
 }
 
 
 create_player :: proc(estate: ^engine.State) -> (player: Player) {
-    player.position = { 100, 100 }
+    player.position = { engine.SCREEN_WIDTH / 2 - 8, engine.SCREEN_HEIGHT / 2 - 8 }
+    player.prev_position = player.position
     player.rendering = true
-    player.speed = 100.0
+    player.speed = 2
     player.forward = .NORTH
 
     if texture, ok := gfx.create_texture_from_image(estate.renderer, "resources/player.bmp"); ok {
@@ -87,7 +92,14 @@ cleanup_player :: proc(player: ^Player) {
     SDL.DestroyTexture(player.texture)
 }
 
-get_player_rect :: proc(player: Player) -> SDL.FRect {
+get_player_rect :: proc(player: Player) -> SDL.Rect {
+    return {
+        x = player.position.x, y = player.position.y,
+        w = player.texture.w, h = player.texture.h
+    }
+}
+
+get_player_rect_float :: proc(player: Player) -> SDL.FRect {
     return {
         x = f32(player.position.x), y = f32(player.position.y),
         w = f32(player.texture.w), h = f32(player.texture.h)
@@ -137,7 +149,7 @@ shoot_player_bullet :: proc(gstate: ^State) {
     player := &gstate.player
     dir_vectors := MoveVectors
 
-    adjustment: f32 = 1.0
+    adjustment: i32 = 1.0
     spawn_pos := player.position + dir_vectors[player.forward] * adjustment
 
     player.should_shoot = false
@@ -202,20 +214,18 @@ handle_player_movement :: proc(player: ^Player, event: SDL.Event) {
 }
 
 tick_player :: proc(player: ^Player) {
-    
+    if player.active_direction_count > 0 {
+        vectors := MoveVectors
+        direction := vectors[player.forward]
+        player.prev_position = player.position
+        player.position += direction * player.speed
+    }
 }
 
 update_player :: proc(gstate: ^State, player: ^Player, time: ^engine.Time) {
     if player.should_shoot {
         shoot_player_bullet(gstate)
     }
-
-    if player.active_direction_count == 0 {
-        return
-    }
-    vectors := MoveVectors
-    direction := vectors[player.forward]
-    player.position += direction * player.speed * time.delta_seconds
 }
 
 render_player :: proc(state: ^engine.State, player: ^Player) {
@@ -223,8 +233,23 @@ render_player :: proc(state: ^engine.State, player: ^Player) {
         return
     }
 
-    rect := get_player_rect(player^)
+    rect := get_player_rect_float(player^)
     if !SDL.RenderTexture(state.renderer, player.texture, nil, &rect) {
-        log.render_error("failed to render player: %s", SDL.GetError())
+        log.render_error("failed to render player: {}", SDL.GetError())
+    }
+}
+
+render_player_wireframe :: proc(state: ^engine.State, player: ^Player) {
+    rect := get_player_rect_float(player^)
+
+    SDL.SetRenderDrawColor(
+        state.renderer,
+        PlayerWireframeColor.r,
+        PlayerWireframeColor.g,
+        PlayerWireframeColor.b,
+        PlayerWireframeColor.a
+    )
+    if !SDL.RenderRect(state.renderer, &rect) {
+        log.render_error("failed to render player wireframe: %s", SDL.GetError())
     }
 }

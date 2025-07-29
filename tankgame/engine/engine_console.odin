@@ -111,9 +111,9 @@ set_console_cvar :: proc(state: ^State, cvar: CVars, args: string) {
             num, ok := strconv.parse_uint(str)
             if ok do value^ = num
             else do log.console_error("\"%s\" cannot be parsed as uint", args)
-        case ^f32:
-            num, ok := strconv.parse_f32(str)
-            if ok do value^ = num
+        case ^i32:
+            num, ok := strconv.parse_i64(str)
+            if ok do value^ = i32(num)
             else do log.console_error("\"%s\" cannot be parsed as f32", args)
         case ^string:
             value^ = str

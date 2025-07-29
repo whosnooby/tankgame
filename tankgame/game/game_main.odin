@@ -19,7 +19,10 @@ render_game_to_target :: proc(estate: ^engine.State, gstate: ^State) {
     }
 
     if estate.wireframe_mode != .NO_WIREFRAME {
+        render_state_wireframes(gstate, estate) 
     }
+
+    render_state_debug_text(gstate, estate.renderer)
 }
 
 render_game_to_window :: proc(estate: ^engine.State) {

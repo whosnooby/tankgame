@@ -7,8 +7,8 @@ import "../engine/log"
 import SDL "vendor:sdl3"
 
 Bullet :: struct {
-    speed: f32,
-    position: engine.vec2,
+    speed: i32,
+    position: engine.vec2i,
     direction: MoveDirection,
     ticks_left: i64,
 }
@@ -17,6 +17,7 @@ BulletPoolSize :: 32
 BulletLifetime :: 128
 BulletSpeed :: 4.0
 BulletSize : engine.vec2i : { 8, 8 }
+BulletWireframeColor : [4]u8 : { 160, 70, 40, 255 }
 
 BulletPool :: struct {
     pool: [BulletPoolSize]Bullet,
@@ -67,7 +68,7 @@ tick_bullet_pool :: proc(pool: ^BulletPool) {
 
 spawn_bullet_from_pool :: proc(
     pool: ^BulletPool,
-    direction: MoveDirection, position: engine.vec2
+    direction: MoveDirection, position: engine.vec2i
 ) -> bool {
     if card(pool.free_slots) == 0 {
         log.app_error("attempt to spawn bullet when pool is full")
@@ -110,10 +111,35 @@ render_bullets :: proc(estate: ^engine.State, pool: BulletPool) {
         }
 
         bullet_rect : SDL.FRect = {
-            x = bullet.position.x, y = bullet.position.y,
+            x = f32(bullet.position.x), y = f32(bullet.position.y),
             w = f32(BulletSize.x), h = f32(BulletSize.y)
         }
         SDL.RenderTexture(estate.renderer, pool.bullet_texture, nil, &bullet_rect)
+    }
+}
+
+render_bullet_wireframes :: proc(estate: ^engine.State, pool: BulletPool) {
+    if card(pool.free_slots) == BulletPoolSize {
+        return
+    }
+
+    for bullet in pool.pool {
+        if bullet.ticks_left <= 0 {
+            continue
+        }
+
+        bullet_rect : SDL.FRect = {
+            x = f32(bullet.position.x), y = f32(bullet.position.y),
+            w = f32(BulletSize.x), h = f32(BulletSize.y)
+        }
+        SDL.SetRenderDrawColor(
+            estate.renderer,
+            BulletWireframeColor.r,
+            BulletWireframeColor.g,
+            BulletWireframeColor.b,
+            BulletWireframeColor.a
+        )
+        SDL.RenderRect(estate.renderer, &bullet_rect)
     }
 }
 
