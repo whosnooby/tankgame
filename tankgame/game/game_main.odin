@@ -8,10 +8,15 @@ import "core:math"
 
 import SDL "vendor:sdl3"
 
-render_game_to_target :: proc(estate: ^engine.State, gstate: ^State) {
-    SDL.SetRenderTarget(estate.renderer, estate.render_target)
-
+start_render :: proc(estate: ^engine.State) {
     SDL.SetRenderDrawColor(estate.renderer, 0, 0, 0, 255)
+    SDL.RenderClear(estate.renderer)
+}
+
+render_game_level :: proc(estate: ^engine.State, gstate: ^State) {
+    SDL.SetRenderTarget(estate.renderer, estate.level.render_target)
+
+    SDL.SetRenderDrawColor(estate.renderer, 100, 0, 100, 255)
     SDL.RenderClear(estate.renderer)
 
     if estate.wireframe_mode != .ONLY_WIREFRAME {
@@ -19,40 +24,23 @@ render_game_to_target :: proc(estate: ^engine.State, gstate: ^State) {
     }
 
     if estate.wireframe_mode != .NO_WIREFRAME {
+        engine.render_level_grid_lines(estate.level, estate.renderer)
         render_state_wireframes(gstate, estate) 
     }
-
-    render_state_debug_text(gstate, estate.renderer)
 }
 
 render_game_to_window :: proc(estate: ^engine.State) {
     SDL.SetRenderTarget(estate.renderer, nil)
 
-    SDL.SetRenderDrawColor(estate.renderer, 0, 0, 0, 255)
-    SDL.RenderClear(estate.renderer)
-
     draw_width, draw_height: i32
     SDL.GetRenderOutputSize(estate.renderer, &draw_width, &draw_height)
+    engine.update_level_render_area(&estate.level, draw_width, draw_height)
 
-    // code from:
-    // https://blog.roboblob.com/2013/07/27/solving-resolution-independent-rendering-and-2d-camera-using-monogame/
+    SDL.SetRenderDrawColor(estate.renderer, 255, 255, 255, 255)
+    SDL.RenderTexture(estate.renderer, estate.level.render_target, nil, &estate.level.render_area)
+}
 
-    targetAspectRatio := f32(engine.SCREEN_WIDTH) / f32(engine.SCREEN_HEIGHT);
-    width := draw_width
-    height := i32(f32(width) / targetAspectRatio + 0.5);
-    if (height > draw_height) {
-        height = draw_height;
-        width = i32(f32(height) * targetAspectRatio + 0.5);
-    }
-
-    dstrect: SDL.FRect = {
-        x = f32(draw_width / 2) - f32(width / 2),
-        y = f32(draw_height / 2) - f32(height / 2),
-        w = f32(width),
-        h = f32(height)
-    };
-
-    SDL.RenderTexture(estate.renderer, estate.render_target, nil, &dstrect)
+end_render :: proc(estate: ^engine.State) {
     SDL.RenderPresent(estate.renderer)
 }
 
@@ -80,8 +68,9 @@ create_game :: proc(estate: ^engine.State, gstate: ^State) {
         return
     }
 
-    if target, ok := engine.create_render_target(estate); ok {
-        estate.render_target = target
+    if level, ok := engine.create_level(13, 13, engine.WINDOW_WIDTH, engine.WINDOW_HEIGHT, estate.renderer); ok {
+        estate.level = level
+        gstate.level = &estate.level
     } else {
         return
     }
@@ -92,15 +81,14 @@ create_game :: proc(estate: ^engine.State, gstate: ^State) {
 main_loop :: proc(estate: ^engine.State, gstate: ^State) {
     for {
         using estate
-        using gstate
 
         for SDL.PollEvent(&event) {
             #partial switch event.type {
-                case .WINDOW_EXPOSED:
-                    if event.window.data1 == 1 {
-                        log.render_trace("redrawing render target to fit new size")
-                        render_game_to_window(estate)
-                    }
+                case .WINDOW_RESIZED:
+                    log.video_trace(
+                        "window resized to %dx%d",
+                        event.window.data1, event.window.data2
+                    )
                 case .QUIT:
                     return
             }
@@ -122,7 +110,14 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
 
         update_state(gstate, &time)
 
-        render_game_to_target(estate, gstate)
+        start_render(estate)
+
+        render_game_level(estate, gstate)
         render_game_to_window(estate)
+
+        render_game_debug_text(gstate, estate.renderer)
+        engine.render_engine_debug_text(estate)
+
+        end_render(estate)
     }
 }

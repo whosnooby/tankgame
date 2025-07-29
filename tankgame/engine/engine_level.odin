@@ -1,0 +1,105 @@
+package engine
+
+import "gfx"
+import "log"
+
+import SDL "vendor:sdl3"
+
+Level :: struct {
+    width, height: i32,
+    tile_grid: []Tile,
+    render_target: ^SDL.Texture,
+    render_area: SDL.FRect,
+}
+
+LevelGridLineColor : [4]u8 : { 100, 100, 100, 255 }
+
+create_level :: proc(width, height: i32, window_width, window_height: i32, renderer: ^SDL.Renderer) -> (level: Level, ok: bool) {
+    level.width = width
+    level.height = height
+    update_level_render_area(&level, window_width, window_height) 
+    if ok = init_level_tile_grid(&level); !ok {
+        log.level_panic("failed to allocate level grid")
+        return
+    }
+
+    if level.render_target, ok = gfx.create_blank_texture(renderer, { TILE_WIDTH * width, TILE_HEIGHT * height }); !ok {
+        log.input_panic("failed to generate level render target")
+        return
+    }
+    SDL.SetTextureScaleMode(level.render_target, .NEAREST)
+
+    return level, ok
+}
+
+init_level_tile_grid :: proc(level: ^Level) -> bool {
+    tile_count := level.width * level.height
+    grid, err := make([]Tile, tile_count)
+    level.tile_grid = grid
+
+    return err == .None
+}
+
+update_level_render_area :: proc(level: ^Level, window_width, window_height: i32) {
+    area := get_level_render_area_for_window_size(level^, window_width, window_height)
+    level.render_area = area
+}
+
+get_level_render_area_for_window_size :: proc(level: Level, window_width, window_height: i32) -> SDL.FRect {
+    height := window_height - window_height % level.height
+    width := min(height, window_width)
+    x := window_width / 2 - width / 2
+    y := window_height / 2 - height / 2
+
+    return {
+        x = f32(x),
+        y = f32(y),
+        w = f32(width),
+        h = f32(height)
+    }
+}
+
+render_level_grid_lines :: proc(level: Level, renderer: ^SDL.Renderer) {
+    rects := make([]SDL.FRect, level.width * level.height)
+    defer delete(rects)
+
+    x_min := f32(0.0)
+    x_max := f32(level.width * TILE_WIDTH)
+    y_min := f32(0.0)
+    y_max := f32(level.height * TILE_HEIGHT)
+
+    SDL.SetRenderDrawColor(
+        renderer,
+        LevelGridLineColor.r,
+        LevelGridLineColor.g,
+        LevelGridLineColor.b,
+        LevelGridLineColor.a
+    )
+
+    for y in 0..<level.height {
+        y_curr := f32(y * TILE_HEIGHT)
+        SDL.RenderLine(renderer, x_min, y_curr, x_max, y_curr)
+    }
+    for x in 0..<level.width {
+        x_curr := f32(x * TILE_WIDTH)
+        SDL.RenderLine(renderer, x_curr, y_min, x_curr, y_max)
+    }
+}
+
+get_level_tile_coord_from_position :: proc(level: Level, pos: vec2i) -> vec2i {
+    return {
+        pos.x / TILE_WIDTH,
+        pos.y / TILE_HEIGHT
+    }
+}
+
+get_position_from_level_tile_coord :: proc(level: Level, x, y: i32) -> vec2i {
+    return {
+        x * TILE_WIDTH,
+        y * TILE_HEIGHT
+    }
+}
+
+cleanup_level :: proc(level: ^Level) {
+    delete(level.tile_grid)
+}

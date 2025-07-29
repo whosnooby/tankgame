@@ -8,6 +8,7 @@ import SDL "vendor:sdl3"
 State :: struct {
     bullet_pool: BulletPool,
     player: Player,
+    level: ^engine.Level,
 }
 
 init_game_state :: proc(gstate: ^State, estate: ^engine.State) {
@@ -29,21 +30,32 @@ render_state :: proc(gstate: ^State, estate: ^engine.State) {
     render_bullets(estate, gstate.bullet_pool)
 }
 
-render_state_debug_text :: proc(gstate: ^State, renderer: ^SDL.Renderer) {
+render_game_debug_text :: proc(gstate: ^State, renderer: ^SDL.Renderer) {
     player := &gstate.player
 
+    line_x : f32 : 2
     line_h : i32 : 12
-    line :: proc(n: i32) -> f32 {
+    line_y :: proc(n: i32) -> f32 {
         return f32(2 + line_h * n)
     }
 
     SDL.SetRenderDrawColor(renderer, 255, 255, 255, 255)
 
-    SDL.RenderDebugTextFormat(renderer, 2, line(0), "player tile: %d, %d", player.tile_x, player.tile_y)
+    SDL.RenderDebugTextFormat(
+        renderer,
+        line_x, line_y(0),
+        "player tile: %d, %d",
+        player.tile_x, player.tile_y
+    )
 
     bullet_pool_free := card(gstate.bullet_pool.free_slots)
     bullet_pool_active := BulletPoolSize - bullet_pool_free
-    SDL.RenderDebugTextFormat(renderer, 2, line(1), "player bullets active/free: %d/%d", bullet_pool_active, bullet_pool_free)
+    SDL.RenderDebugTextFormat(
+        renderer,
+        line_x, line_y(1),
+        "player bullets active/free: %d/%d",
+        bullet_pool_active, bullet_pool_free
+    )
 }
 
 render_state_wireframes :: proc(gstate: ^State, estate: ^engine.State) {

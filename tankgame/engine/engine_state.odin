@@ -9,27 +9,27 @@ import SDL "vendor:sdl3"
 State :: struct {
     window : ^SDL.Window,
     renderer : ^SDL.Renderer,
-    render_target: ^SDL.Texture,
     event : SDL.Event,
     time: Time,
+    level: Level,
 
     wireframe_mode: enum { NO_WIREFRAME, WIREFRAME, ONLY_WIREFRAME },
 }
 
-SCREEN_WIDTH : i32 : 640
-SCREEN_HEIGHT: i32 : 360
+WINDOW_WIDTH : i32 : 1280
+WINDOW_HEIGHT: i32 : 720
 
 create_window :: proc() -> (window: ^SDL.Window, ok: bool) {
     title :: "tankgame"
     flags: SDL.WindowFlags : { .RESIZABLE }
 
     log.video_info("creating window (w: %d, h: %d) title: \"%s\" %v",
-        SCREEN_WIDTH, SCREEN_HEIGHT, title, flags
+        WINDOW_WIDTH, WINDOW_HEIGHT, title, flags
     )
 
     window = SDL.CreateWindow(
         "tankgame",
-        SCREEN_WIDTH*2, SCREEN_HEIGHT*2,
+        WINDOW_WIDTH, WINDOW_HEIGHT,
         { .RESIZABLE, },
     )
 
@@ -58,17 +58,6 @@ create_renderer :: proc(state: ^State) -> (renderer: ^SDL.Renderer, ok: bool) {
     return
 }
 
-create_render_target :: proc(state: ^State) -> (target: ^SDL.Texture, ok: bool) {
-    target, ok = gfx.create_blank_texture(state.renderer, [2]i32{ SCREEN_WIDTH, SCREEN_HEIGHT })
-    if !ok {
-        log.render_panic("failed to create render target texture")
-    }
-
-    SDL.SetTextureScaleMode(target, .NEAREST)
-
-    return
-}
-
 query_render_drivers :: proc() {
     count := SDL.GetNumRenderDrivers()
     log.render_info("querying render drivers (found %d):", count)
@@ -80,8 +69,27 @@ query_render_drivers :: proc() {
     }
 }
 
+render_engine_debug_text :: proc(state: ^State) {
+    line_h : i32 : 12
+    line_x := state.level.render_area.x + state.level.render_area.w + 2.0
+    line_y :: proc(n: i32) -> f32 {
+        return f32(2 + line_h * n)
+    }
+
+    SDL.SetRenderTarget(state.renderer, nil)
+    SDL.SetRenderDrawColor(state.renderer, 255, 255, 255, 255)
+
+    SDL.RenderDebugTextFormat(
+        state.renderer,
+        line_x, line_y(0),
+        "lvl render area: (%.0f, %.0f) @ %.0fx%.0f",
+        state.level.render_area.x, state.level.render_area.y,
+        state.level.render_area.w, state.level.render_area.h
+    )
+}
+
 cleanup_state :: proc(state: ^State) {
-    SDL.DestroyTexture(state.render_target)
+    cleanup_level(&state.level)
     SDL.DestroyRenderer(state.renderer)
     SDL.DestroyWindow(state.window)
 }

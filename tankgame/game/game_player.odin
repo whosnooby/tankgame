@@ -51,7 +51,7 @@ Player :: struct {
     prev_position: engine.vec2i,
     speed: i32,
     directions: [4]MoveDirection,
-    active_direction_count: int,
+    active_direction_count: i32,
 
     forward: MoveDirection,
 
@@ -61,12 +61,12 @@ Player :: struct {
     rendering: bool,
 
     collider: aabb.AABB,
-    tile_x, tile_y: int,
+    tile_x, tile_y: i32,
 }
 
 
 create_player :: proc(estate: ^engine.State) -> (player: Player) {
-    player.position = { engine.SCREEN_WIDTH / 2 - 8, engine.SCREEN_HEIGHT / 2 - 8 }
+    player.position = engine.get_position_from_level_tile_coord(estate.level, 6, 12)
     player.prev_position = player.position
     player.rendering = true
     player.speed = 2
@@ -226,6 +226,10 @@ update_player :: proc(gstate: ^State, player: ^Player, time: ^engine.Time) {
     if player.should_shoot {
         shoot_player_bullet(gstate)
     }
+
+    tile_pos := engine.get_level_tile_coord_from_position(gstate.level^, player.position)
+    player.tile_x = tile_pos.x
+    player.tile_y = tile_pos.y
 }
 
 render_player :: proc(state: ^engine.State, player: ^Player) {

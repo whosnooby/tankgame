@@ -16,7 +16,7 @@ Bullet :: struct {
 BulletPoolSize :: 32
 BulletLifetime :: 128
 BulletSpeed :: 4.0
-BulletSize : engine.vec2i : { 8, 8 }
+BulletSize : engine.vec2i : { 6, 6 }
 BulletWireframeColor : [4]u8 : { 160, 70, 40, 255 }
 
 BulletPool :: struct {
