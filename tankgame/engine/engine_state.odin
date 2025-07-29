@@ -2,7 +2,7 @@ package engine
 
 import "collider/aabb"
 import "gfx"
-import log "logging"
+import "log"
 
 import SDL "vendor:sdl3"
 

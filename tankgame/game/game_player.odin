@@ -3,7 +3,7 @@ package game
 import "../engine"
 import "../engine/collider/aabb"
 import "../engine/gfx"
-import log "../engine/logging"
+import "../engine/log"
 
 import SDL "vendor:sdl3"
 

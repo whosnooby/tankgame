@@ -2,7 +2,7 @@ package game
 
 import "../engine"
 import "../engine/collider/aabb"
-import log "../engine/logging"
+import "../engine/log"
 
 import "core:math"
 

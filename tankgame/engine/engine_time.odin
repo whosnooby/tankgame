@@ -1,6 +1,6 @@
 package engine
 
-import log "logging"
+import "log"
 
 import SDL "vendor:sdl3"
 

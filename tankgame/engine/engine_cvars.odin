@@ -2,7 +2,7 @@
 
 package engine
 
-import log "logging"
+import "log"
 
 import "core:fmt"
 import "core:reflect"
