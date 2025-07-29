@@ -65,15 +65,8 @@ create_game :: proc(estate: ^engine.State, gstate: ^State) {
     estate.time = engine.init_time(64)
     estate.wireframe_mode = .WIREFRAME
 
-    SDL.SetLogOutputFunction(engine.console_logfn, &estate.console)
+    SDL.SetLogOutputFunction(log.logfn, nil)
     SDL.SetLogPriorities(.TRACE)
-
-    if console, ok := engine.create_console(estate); ok {
-        estate.console = console
-    } else {
-        log.app_panic("failed to create console")
-        return
-    }
 
     if window, ok := engine.create_window(); ok {
         estate.window = window
@@ -81,14 +74,11 @@ create_game :: proc(estate: ^engine.State, gstate: ^State) {
         return
     }
 
-    engine.resize_console(estate)
-
     if renderer, ok := engine.create_renderer(estate); ok {
         estate.renderer = renderer
     } else {
         return
     }
-    engine.create_console_text_engine(estate)
 
     if target, ok := engine.create_render_target(estate); ok {
         estate.render_target = target
@@ -97,11 +87,6 @@ create_game :: proc(estate: ^engine.State, gstate: ^State) {
     }
 
     init_game_state(gstate, estate)
-
-    engine.initialize_engine_cvars(estate)
-    add_game_cvars(estate, gstate)
-
-    engine.print_cvars(estate, "initialized cvars:")
 }
 
 main_loop :: proc(estate: ^engine.State, gstate: ^State) {

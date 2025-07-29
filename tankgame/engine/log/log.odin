@@ -18,9 +18,9 @@ LogCategory :: enum i32 {
 	TEST        = i32(SDL.LogCategory.TEST),
 	GPU         = i32(SDL.LogCategory.GPU),
 
-    CONSOLE     = i32(SDL.LogCategory.CUSTOM),
-    LEVEL,
-    CUSTOM,
+    CUSTOM      = i32(SDL.LogCategory.CUSTOM),
+	PLAYER,
+	LEVEL,
 }
 
 @(private="package")
@@ -35,4 +35,18 @@ log_message :: proc(priority: SDL.LogPriority, category: LogCategory, msg: strin
 panic_message :: proc(category: LogCategory, loc: rt.Source_Code_Location, msg: string, args: ..any,) {
     log_message(.CRITICAL, category, msg, ..args)
     fmt.panicf(string(msg), ..args, loc = loc)
+}
+
+logfn :: proc "c" (
+    userdata: rawptr,
+    category: SDL.LogCategory,
+    priority: SDL.LogPriority,
+    message: cstring
+) {
+    context = rt.default_context()
+
+    log_category := (LogCategory)(category)
+	time := SDL.GetTicks()
+
+	fmt.printfln("[%6d][%s][%s] %s", time, priority, log_category, message)
 }

@@ -14,12 +14,6 @@ State :: struct {
     time: Time,
 
     wireframe_mode: enum { NO_WIREFRAME, WIREFRAME, ONLY_WIREFRAME },
-
-    rendering_console: bool,
-    console: Console,
-
-    cvar_names: [CVars]string,
-    cvars: [CVars]CVar,
 }
 
 SCREEN_WIDTH : i32 : 640
@@ -87,8 +81,6 @@ query_render_drivers :: proc() {
 }
 
 cleanup_state :: proc(state: ^State) {
-    cleanup_console(&state.console)
-
     SDL.DestroyTexture(state.render_target)
     SDL.DestroyRenderer(state.renderer)
     SDL.DestroyWindow(state.window)

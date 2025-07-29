@@ -42,10 +42,6 @@ set_time_tick_rate :: proc(time: ^Time, tick_rate: uint) {
     time.ns_per_tick = 1e9 / tick_rate
 }
 
-update_time_tick_rate :: proc(state: ^State, cvar: ^CVar) {
-    state.time.ns_per_tick = 1e9 / state.time.tick_rate
-}
-
 time_previous_frame :: proc(time: ^Time) {
     time.now = SDL.GetTicksNS()
     time.delta = time.now - time.last_frame
