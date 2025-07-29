@@ -48,5 +48,5 @@ logfn :: proc "c" (
     log_category := (LogCategory)(category)
 	time := SDL.GetTicks()
 
-	fmt.printfln("[%6d][%s][%s] %s", time, priority, log_category, message)
+	fmt.printfln("[%s][%s] %s", priority, log_category, message)
 }
