@@ -57,7 +57,7 @@ Player :: struct {
     texture: ^SDL.Texture,
     rendering: bool,
 
-    collider: ^aabb.AABB
+    collider: aabb.AABB,
 }
 
 
@@ -78,18 +78,9 @@ create_player :: proc(estate: ^engine.State) -> (player: Player) {
         }
     }
 
-    collider := aabb.get_aabb_from_pool(&estate.aabb_pool)
-    if collider == nil {
-        log.physics_panic("failed to allocate a physics collider to player")
-    }
-    player.collider = collider
-    aabb.init_aabb(player.collider, get_player_rect(player))
+    player.collider = aabb.create_aabb(get_player_rect(player))
 
     return
-}
-
-update_player_collider :: proc(player: ^Player) {
-    aabb.set_aabb_area(player.collider, get_player_rect(player^))
 }
 
 cleanup_player :: proc(player: ^Player) {

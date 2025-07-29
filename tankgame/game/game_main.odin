@@ -19,7 +19,6 @@ render_game_to_target :: proc(estate: ^engine.State, gstate: ^State) {
     }
 
     if estate.wireframe_mode != .NO_WIREFRAME {
-        aabb.render_wireframes(estate.renderer, estate.aabb_pool)
     }
 }
 
@@ -129,9 +128,6 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
 
         engine.prepare_to_tick(&time)
         for engine.should_tick(&time) {
-            update_dynamic_colliders(gstate)
-            aabb.check_pool_intersections(&aabb_pool)
-
             tick_state(gstate)
         }
         engine.stop_ticking(&time)

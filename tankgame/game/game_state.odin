@@ -16,11 +16,6 @@ init_game_state :: proc(gstate: ^State, estate: ^engine.State) {
     init_bullet_pool(&gstate.bullet_pool, estate)
 }
 
-// used to update colliders before the physics tick
-update_dynamic_colliders :: proc(gstate: ^State) {
-    update_player_collider(&gstate.player) 
-}
-
 tick_state :: proc(gstate: ^State) {
     tick_bullet_pool(&gstate.bullet_pool)
     tick_player(&gstate.player)

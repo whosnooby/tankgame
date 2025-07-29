@@ -13,7 +13,6 @@ State :: struct {
     event : SDL.Event,
     time: Time,
 
-    aabb_pool: aabb.Pool,
     wireframe_mode: enum { NO_WIREFRAME, WIREFRAME, ONLY_WIREFRAME },
 
     rendering_console: bool,
