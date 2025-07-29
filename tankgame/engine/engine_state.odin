@@ -88,7 +88,7 @@ query_render_drivers :: proc() {
 }
 
 cleanup_state :: proc(state: ^State) {
-    clear_console(&state.console)
+    cleanup_console(&state.console)
 
     SDL.DestroyTexture(state.render_target)
     SDL.DestroyRenderer(state.renderer)

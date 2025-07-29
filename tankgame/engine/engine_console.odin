@@ -178,6 +178,7 @@ render_console :: proc(state: ^State) {
 }
 
 cleanup_console :: proc(console: ^Console) {
+    strings.builder_destroy(&console.content)
     TTF.CloseFont(console.font)
     TTF.DestroyRendererTextEngine(console.text_engine)
 }
