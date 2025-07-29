@@ -49,6 +49,8 @@ create_window :: proc() -> (window: ^SDL.Window, ok: bool) {
 }
 
 create_renderer :: proc(state: ^State) -> (renderer: ^SDL.Renderer, ok: bool) {
+    query_render_drivers()
+
     renderer = SDL.CreateRenderer(
         state.window,
         nil,
@@ -59,11 +61,6 @@ create_renderer :: proc(state: ^State) -> (renderer: ^SDL.Renderer, ok: bool) {
         log.render_error("no renderer L: %s", SDL.GetError())
         return
     }
-
-    query_render_drivers()
-
-    name := SDL.GetRendererName(renderer)
-    log.render_info("created renderer: %s", name)
 
     return
 }
