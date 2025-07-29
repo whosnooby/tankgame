@@ -16,20 +16,20 @@ State :: struct {
     wireframe_mode: enum { NO_WIREFRAME, WIREFRAME, ONLY_WIREFRAME },
 }
 
-WINDOW_WIDTH : i32 : 1280
-WINDOW_HEIGHT: i32 : 720
+WindowWidth : i32 : 1280
+WindowHeight: i32 : 720
 
 create_window :: proc() -> (window: ^SDL.Window, ok: bool) {
     title :: "tankgame"
     flags: SDL.WindowFlags : { .RESIZABLE }
 
     log.video_info("creating window (w: %d, h: %d) title: \"%s\" %v",
-        WINDOW_WIDTH, WINDOW_HEIGHT, title, flags
+        WindowWidth, WindowHeight, title, flags
     )
 
     window = SDL.CreateWindow(
         "tankgame",
-        WINDOW_WIDTH, WINDOW_HEIGHT,
+        WindowWidth, WindowHeight,
         { .RESIZABLE, },
     )
 

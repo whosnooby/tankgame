@@ -69,14 +69,14 @@ create_player :: proc(estate: ^engine.State) -> (player: Player) {
     player.position = engine.get_position_from_level_tile_coord(estate.level, 6, 12)
     player.prev_position = player.position
     player.rendering = true
-    player.speed = 2
+    player.speed = 1
     player.forward = .NORTH
 
     if texture, ok := gfx.create_texture_from_image(estate.renderer, "resources/player.bmp"); ok {
         player.texture = texture
     } else {
         log.render_warn("falling back to solid color player texture")
-        texture, ok := gfx.create_solid_texture(estate.renderer, { 16, 16 }, { 255, 0, 255, 255 })
+        texture, ok := gfx.create_solid_texture(estate.renderer, engine.TileSize, { 255, 0, 255, 255 })
         player.texture = texture
         if !ok {
             log.render_panic("failed to load/generate player texture")
@@ -149,8 +149,8 @@ shoot_player_bullet :: proc(gstate: ^State) {
     player := &gstate.player
     dir_vectors := MoveVectors
 
-    adjustment: i32 = engine.TILE_WIDTH / 2
-    player_center := player.position + { engine.TILE_WIDTH / 2, engine.TILE_HEIGHT / 2 }
+    adjustment: i32 = engine.TileSize.x / 2
+    player_center := player.position + (engine.vec2i)(engine.TileSize / 2)
     half_bullet_size := BulletSize / 2 
     spawn_pos := player_center - half_bullet_size + dir_vectors[player.forward] * adjustment
 
@@ -255,6 +255,8 @@ render_player_wireframe :: proc(state: ^engine.State, player: ^Player) {
         PlayerWireframeColor.b,
         PlayerWireframeColor.a
     )
+
+
     if !SDL.RenderRect(state.renderer, &rect) {
         log.render_error("failed to render player wireframe: %s", SDL.GetError())
     }

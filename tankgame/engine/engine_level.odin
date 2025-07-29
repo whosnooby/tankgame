@@ -23,7 +23,7 @@ create_level :: proc(width, height: i32, window_width, window_height: i32, rende
         return
     }
 
-    if level.render_target, ok = gfx.create_blank_texture(renderer, { TILE_WIDTH * width, TILE_HEIGHT * height }); !ok {
+    if level.render_target, ok = gfx.create_blank_texture(renderer, TileSize * { width, height }); !ok {
         log.input_panic("failed to generate level render target")
         return
     }
@@ -64,9 +64,9 @@ render_level_grid_lines :: proc(level: Level, renderer: ^SDL.Renderer) {
     defer delete(rects)
 
     x_min := f32(0.0)
-    x_max := f32(level.width * TILE_WIDTH)
+    x_max := f32(level.width * TileSize.x)
     y_min := f32(0.0)
-    y_max := f32(level.height * TILE_HEIGHT)
+    y_max := f32(level.height * TileSize.y)
 
     SDL.SetRenderDrawColor(
         renderer,
@@ -77,27 +77,21 @@ render_level_grid_lines :: proc(level: Level, renderer: ^SDL.Renderer) {
     )
 
     for y in 0..<level.height {
-        y_curr := f32(y * TILE_HEIGHT)
+        y_curr := f32(y * TileSize.y)
         SDL.RenderLine(renderer, x_min, y_curr, x_max, y_curr)
     }
     for x in 0..<level.width {
-        x_curr := f32(x * TILE_WIDTH)
+        x_curr := f32(x * TileSize.x)
         SDL.RenderLine(renderer, x_curr, y_min, x_curr, y_max)
     }
 }
 
 get_level_tile_coord_from_position :: proc(level: Level, pos: vec2i) -> vec2i {
-    return {
-        pos.x / TILE_WIDTH,
-        pos.y / TILE_HEIGHT
-    }
+    return pos / (vec2i)(TileSize)
 }
 
 get_position_from_level_tile_coord :: proc(level: Level, x, y: i32) -> vec2i {
-    return {
-        x * TILE_WIDTH,
-        y * TILE_HEIGHT
-    }
+    return (vec2i)({ x, y }) * (vec2i)(TileSize)
 }
 
 cleanup_level :: proc(level: ^Level) {

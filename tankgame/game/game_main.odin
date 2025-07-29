@@ -68,7 +68,7 @@ create_game :: proc(estate: ^engine.State, gstate: ^State) {
         return
     }
 
-    if level, ok := engine.create_level(13, 13, engine.WINDOW_WIDTH, engine.WINDOW_HEIGHT, estate.renderer); ok {
+    if level, ok := engine.create_level(13, 13, engine.WindowWidth, engine.WindowHeight, estate.renderer); ok {
         estate.level = level
         gstate.level = &estate.level
     } else {

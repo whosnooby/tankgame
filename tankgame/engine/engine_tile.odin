@@ -1,7 +1,6 @@
 package engine
 
-TILE_WIDTH :: 16
-TILE_HEIGHT :: 16
+TileSize : [2]i32 : { 32, 32 }
 
 TileType :: enum {
     EMPTY = 0,
