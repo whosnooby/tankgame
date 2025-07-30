@@ -79,13 +79,31 @@ render_engine_debug_text :: proc(state: ^State) {
     SDL.SetRenderTarget(state.renderer, nil)
     SDL.SetRenderDrawColor(state.renderer, 255, 255, 255, 255)
 
+    curr_line : i32 = 0
     SDL.RenderDebugTextFormat(
         state.renderer,
-        line_x, line_y(0),
+        line_x, line_y(curr_line),
         "lvl render area: (%.0f, %.0f) @ %.0fx%.0f",
         state.level.render_area.x, state.level.render_area.y,
         state.level.render_area.w, state.level.render_area.h
     )
+    curr_line += 1
+
+    SDL.RenderDebugTextFormat(
+        state.renderer,
+        line_x, line_y(curr_line),
+        "fps: %d",
+        state.time.last_fps
+    )
+    curr_line += 1
+
+    SDL.RenderDebugTextFormat(
+        state.renderer,
+        line_x, line_y(curr_line),
+        "tps: %d",
+        state.time.last_tps
+    )
+    curr_line += 1
 }
 
 cleanup_state :: proc(state: ^State) {

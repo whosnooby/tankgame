@@ -9,6 +9,11 @@ import "core:math"
 import SDL "vendor:sdl3"
 
 start_render :: proc(estate: ^engine.State) {
+    SDL.SetRenderTarget(estate.renderer, estate.level.render_target)
+    SDL.SetRenderDrawColor(estate.renderer, 0, 0, 0, 255)
+    SDL.RenderClear(estate.renderer)
+
+    SDL.SetRenderTarget(estate.renderer, nil)
     SDL.SetRenderDrawColor(estate.renderer, 0, 0, 0, 255)
     SDL.RenderClear(estate.renderer)
 }
@@ -16,10 +21,8 @@ start_render :: proc(estate: ^engine.State) {
 render_game_level :: proc(estate: ^engine.State, gstate: ^State) {
     SDL.SetRenderTarget(estate.renderer, estate.level.render_target)
 
-    SDL.SetRenderDrawColor(estate.renderer, 100, 0, 100, 255)
-    SDL.RenderClear(estate.renderer)
-
     if estate.wireframe_mode != .ONLY_WIREFRAME {
+        engine.render_level_tiles(estate.level, estate.renderer)
         render_state(gstate, estate)
     }
 
@@ -94,7 +97,7 @@ main_loop :: proc(estate: ^engine.State, gstate: ^State) {
             }
 
             if does_player_handle(event) {
-                handle_player_input(gstate, event)
+                handle_player_input(&gstate.player, event)
             }
         }
 

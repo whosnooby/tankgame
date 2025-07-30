@@ -12,7 +12,7 @@ State :: struct {
 }
 
 init_game_state :: proc(gstate: ^State, estate: ^engine.State) {
-    gstate.player = create_player(estate)
+    gstate.player = create_player(gstate, estate)
     init_bullet_pool(&gstate.bullet_pool, estate)
 }
 
@@ -22,12 +22,12 @@ tick_state :: proc(gstate: ^State) {
 }
 
 update_state :: proc(gstate: ^State, time: ^engine.Time) {
-    update_player(gstate, &gstate.player, time)
+    update_player(&gstate.player, time)
 }
 
 render_state :: proc(gstate: ^State, estate: ^engine.State) {
-    render_player(estate, &gstate.player)
-    render_bullets(estate, gstate.bullet_pool)
+    render_player(gstate.player, estate.renderer)
+    render_bullets(gstate.bullet_pool, estate.renderer)
 }
 
 render_game_debug_text :: proc(gstate: ^State, renderer: ^SDL.Renderer) {
@@ -59,8 +59,8 @@ render_game_debug_text :: proc(gstate: ^State, renderer: ^SDL.Renderer) {
 }
 
 render_state_wireframes :: proc(gstate: ^State, estate: ^engine.State) {
-    render_player_wireframe(estate, &gstate.player)
-    render_bullet_wireframes(estate, gstate.bullet_pool)
+    render_player_wireframe(gstate.player, estate.renderer)
+    render_bullet_wireframes(gstate.bullet_pool, estate.renderer)
 }
 
 cleanup_state :: proc(gstate: ^State) {

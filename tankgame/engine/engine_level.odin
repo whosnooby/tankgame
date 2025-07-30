@@ -35,7 +35,13 @@ create_level :: proc(width, height: i32, window_width, window_height: i32, rende
 init_level_tile_grid :: proc(level: ^Level) -> bool {
     tile_count := level.width * level.height
     grid, err := make([]Tile, tile_count)
+    (err == .None) or_return 
     level.tile_grid = grid
+
+    for &tile, idx in grid {
+        tile.x = i32(idx) % level.width
+        tile.y = i32(idx) / level.width
+    }
 
     return err == .None
 }
@@ -56,6 +62,22 @@ get_level_render_area_for_window_size :: proc(level: Level, window_width, window
         y = f32(y),
         w = f32(width),
         h = f32(height)
+    }
+}
+
+render_level_tiles :: proc(level: Level, renderer: ^SDL.Renderer) {
+    for tile in level.tile_grid {
+        if TileFlag.HAS_PLAYER in tile.flags {
+            SDL.SetRenderDrawColor(renderer, 40, 180, 40, 255)
+        } else {
+            SDL.SetRenderDrawColor(renderer, 180, 40, 40, 255)
+        }
+
+        tile_rect : SDL.FRect = {
+            f32(tile.x * TileSize.x), f32(tile.y * TileSize.y),
+            f32(TileSize.x), f32(TileSize.y)
+        }
+        SDL.RenderFillRect(renderer, &tile_rect)
     }
 }
 
@@ -92,6 +114,20 @@ get_level_tile_coord_from_position :: proc(level: Level, pos: vec2i) -> vec2i {
 
 get_position_from_level_tile_coord :: proc(level: Level, x, y: i32) -> vec2i {
     return (vec2i)({ x, y }) * (vec2i)(TileSize)
+}
+
+get_level_tile :: proc(level: ^Level, x, y: i32) -> (tile: ^Tile, ok: bool) {
+    if x < 0 || x >= level.width || y < 0 || y >= level.height {
+        log.level_error(
+            "attempt to get oob tile ({}, {}) for {}x{} level",
+            x, y,
+            level.width, level.height
+        )
+
+        return nil, false
+    }
+
+    return &level.tile_grid[level.width * y + x], true
 }
 
 cleanup_level :: proc(level: ^Level) {
